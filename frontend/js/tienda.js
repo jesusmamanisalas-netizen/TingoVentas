@@ -13,7 +13,7 @@ let allProducts = [];
  */
 async function loadCategories() {
     try {
-        const response = await fetch(`${API_URL}/productos/categorias`);
+        const response = await fetch(`${API_URL}/api/categorias`);
         if (response.ok) {
             categories = await response.json();
             renderCategories();
@@ -54,7 +54,7 @@ async function loadProducts(search = '', categoryId = '') {
     noProducts.classList.add('hidden');
 
     try {
-        let url = `${API_URL}/productos/publicos?`;
+        let url = `${API_URL}/api/publicos?`;
         if (search) url += `search=${encodeURIComponent(search)}&`;
         if (categoryId) url += `category_id=${encodeURIComponent(categoryId)}&`;
 

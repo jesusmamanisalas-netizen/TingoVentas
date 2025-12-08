@@ -9,7 +9,7 @@ api_router = APIRouter()
 
 # Incluir todos los routers
 api_router.include_router(auth_controller.router)
-api_router.include_router(product_controller.router)
+api_router.include_router(product_controller.router, prefix="/productos")
 api_router.include_router(role_controller.router)
 api_router.include_router(audit_controller.router)
 

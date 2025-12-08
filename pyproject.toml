@@ -1,0 +1,17 @@
+[tool.pyright]
+include = ["backend"]
+exclude = [
+    "**/__pycache__",
+    "**/node_modules",
+    "**/venv",
+    "**/.venv"
+]
+reportMissingImports = true
+reportMissingTypeStubs = false
+pythonVersion = "3.8"
+typeCheckingMode = "basic"
+
+[tool.pylint]
+# Configuración para Pylint si lo usas
+disable = ["import-error"]
+

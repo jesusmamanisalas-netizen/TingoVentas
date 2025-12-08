@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tingo Ventas - Sistema de Gestión</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div id="app" class="min-h-screen">
+        <!-- Cargando -->
+        <div id="loading" class="flex items-center justify-center min-h-screen">
+            <div class="text-center">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                <p class="mt-4 text-gray-600">Cargando...</p>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Verificar autenticación y redirigir
+        const token = localStorage.getItem('access_token');
+        
+        if (token) {
+            window.location.href = 'dashboard.html';
+        } else {
+            // Redirigir a la tienda pública en lugar de login
+            window.location.href = 'tienda.html';
+        }
+    </script>
+</body>
+</html>
+

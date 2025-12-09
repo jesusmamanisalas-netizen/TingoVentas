@@ -5,7 +5,7 @@
 // URL del backend API
 // Para desarrollo local: 'http://localhost:8000/api'
 // Para producción: 'https://tu-backend-en-render.com/api'
-const API_BASE_URL = 'https://tingoventas.onrender.com';
+const API_BASE_URL = 'https://tingoventas.onrender.com/api';
 
 // Exportar configuración
 window.APP_CONFIG = {

@@ -331,28 +331,5 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-/**
- * Logout
- */
-async function logout() {
-    const token = localStorage.getItem('access_token');
-    
-    try {
-        if (token) {
-            await fetch(`${API_BASE_URL_USUARIOS}/auth/logout`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-        }
-    } catch (error) {
-        console.error('Error en logout:', error);
-    }
-    
-    // Limpiar storage y redirigir
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('user_data');
-    window.location.href = 'login.html';
-}
+// El logout viene de auth.js, no se redeclara aquí
+

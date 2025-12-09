@@ -15,10 +15,22 @@ const API_BASE_URL = window.APP_CONFIG.API_BASE_URL || 'http://localhost:8000/ap
 // Verificar autenticación al cargar
 document.addEventListener('DOMContentLoaded', () => {
     const token = localStorage.getItem('access_token');
-    if (token && (window.location.pathname.includes('login.html') || window.location.pathname === '/')) {
+    const currentPage = window.location.pathname;
+    
+    // Páginas públicas (no requieren autenticación)
+    const publicPages = ['login.html', 'tienda.html', '/tienda.html', 'index.html', '/index.html', '/'];
+    const isPublicPage = publicPages.some(page => currentPage.includes(page));
+    
+    // Si tiene token y está en login, redirigir a dashboard
+    if (token && currentPage.includes('login.html')) {
         window.location.href = 'dashboard.html';
-    } else if (!token && !window.location.pathname.includes('login.html') && window.location.pathname !== '/') {
-        window.location.href = 'login.html';
+        return;
+    }
+    
+    // Si NO tiene token y está en página privada, redirigir a tienda
+    if (!token && !isPublicPage) {
+        window.location.href = 'tienda.html';
+        return;
     }
     
     // Cargar nombre de usuario si está logueado
@@ -100,14 +112,16 @@ async function logout() {
         // Limpiar localStorage
         localStorage.removeItem('access_token');
         localStorage.removeItem('user');
+        localStorage.removeItem('user_data');
 
-        // Redirigir a login
-        window.location.href = 'login.html';
+        // Redirigir a tienda (página pública)
+        window.location.href = 'tienda.html';
     } catch (error) {
         // Aún así limpiar y redirigir
         localStorage.removeItem('access_token');
         localStorage.removeItem('user');
-        window.location.href = 'login.html';
+        localStorage.removeItem('user_data');
+        window.location.href = 'tienda.html';
     }
 }
 

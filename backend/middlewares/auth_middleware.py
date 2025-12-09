@@ -52,22 +52,40 @@ class AuthMiddleware:
         Returns:
             Función dependency para FastAPI
         """
-        async def role_checker(user: dict = Security(self.get_current_user)) -> dict:
-            user_roles_response = await self.role_service.get_user_roles(user["id"])
-            user_roles = [role.get("name") for role in user_roles_response if role.get("name")]
+        async def role_checker(credentials: HTTPAuthorizationCredentials = Security(security)) -> dict:
+            token = credentials.credentials
+            user = self.auth_service.verify_user_token(token)
             
-            # Admin tiene todos los permisos
-            if "admin" in user_roles:
-                return user
-            
-            # Verificar rol específico
-            if required_role not in user_roles:
+            if user is None:
                 raise HTTPException(
-                    status_code=403,
-                    detail=f"Se requiere rol: {required_role}"
+                    status_code=401,
+                    detail="Token inválido o expirado",
+                    headers={"WWW-Authenticate": "Bearer"},
                 )
             
-            return user
+            try:
+                user_roles_response = await self.role_service.get_user_roles(user["id"])
+                user_roles = [role.get("name") for role in user_roles_response if isinstance(role, dict) and role.get("name")]
+                
+                # Admin tiene todos los permisos
+                if "admin" in user_roles:
+                    return user
+                
+                # Verificar rol específico
+                if required_role not in user_roles:
+                    raise HTTPException(
+                        status_code=403,
+                        detail=f"Se requiere rol: {required_role}"
+                    )
+                
+                return user
+            except HTTPException:
+                raise
+            except Exception as e:
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"Error al verificar rol: {str(e)}"
+                )
         
         return role_checker
     

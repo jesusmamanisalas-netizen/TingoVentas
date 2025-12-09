@@ -39,24 +39,24 @@ class RoleService:
             Lista de roles del usuario
         """
         try:
-            # Obtener el perfil del usuario
-            profile_response = self.supabase.table("profiles").select("id, role").eq("id", user_id).execute()
-            
+            # Obtener el perfil del usuario (role_id)
+            profile_response = self.supabase.table("profiles").select("id, role_id").eq("id", user_id).execute()
+
             if not profile_response.data:
                 return []
-            
+
             profile = profile_response.data[0]
-            user_role = profile.get("role")
-            
-            if not user_role:
+            role_id = profile.get("role_id")
+
+            if not role_id:
                 return []
-            
-            # Obtener el rol completo desde la tabla roles
-            role_response = self.supabase.table("roles").select("*").eq("name", user_role).execute()
-            
+
+            # Obtener el rol completo desde la tabla roles por id
+            role_response = self.supabase.table("roles").select("*").eq("id", role_id).execute()
+
             if role_response.data:
                 return role_response.data
-            
+
             return []
         except Exception as e:
             raise Exception(f"Error al obtener roles del usuario: {str(e)}")
@@ -77,17 +77,18 @@ class RoleService:
             role_response = self.supabase.table("roles").select("*").eq("id", role_id).execute()
             if not role_response.data:
                 raise Exception("Rol no encontrado")
-            
+
             role = role_response.data[0]
             role_name = role.get("name")
-            
-            # Actualizar el campo role en profiles
-            update_response = self.supabase.table("profiles").update({"role": role_name}).eq("id", user_id).execute()
-            
+
+            # Actualizar el campo role_id en profiles
+            update_response = self.supabase.table("profiles").update({"role_id": role_id}).eq("id", user_id).execute()
+
             if update_response.data:
+                # Devolver también el nombre del rol para compatibilidad con frontend
                 return {
                     "message": "Rol asignado exitosamente",
-                    "user_role": update_response.data[0]
+                    "user_role": {**update_response.data[0], "role": role_name}
                 }
             raise Exception("Error al asignar rol")
         except Exception as e:
@@ -105,8 +106,8 @@ class RoleService:
             Confirmación de remoción
         """
         try:
-            # Establecer role como null
-            response = self.supabase.table("profiles").update({"role": None}).eq("id", user_id).execute()
+            # Establecer role_id como null
+            response = self.supabase.table("profiles").update({"role_id": None}).eq("id", user_id).execute()
             return {"message": "Rol removido exitosamente"}
         except Exception as e:
             raise Exception(f"Error al remover rol: {str(e)}")
@@ -137,10 +138,10 @@ class RoleService:
             Lista de usuarios con sus roles
         """
         try:
-            response = self.supabase.table("profiles").select("id, email, full_name, role, created_at").execute()
+            response = self.supabase.table("profiles").select("id, email, full_name, role_id, created_at").execute()
             if not response.data:
                 return []
-            
+
             # Enriquecer cada usuario con sus roles
             users: List[Dict[str, Any]] = []
             for user in response.data:
@@ -148,9 +149,17 @@ class RoleService:
                     user_id = user.get("id")
                     if user_id:
                         roles = await self.get_user_roles(str(user_id))
+                        # roles es una lista de objetos role (posiblemente vacía)
                         user["roles"] = roles
+                        # Para compatibilidad con frontend, exponer el nombre del rol en `role` si existe
+                        if roles and isinstance(roles, list) and len(roles) > 0:
+                            first_role = roles[0]
+                            if isinstance(first_role, dict):
+                                user["role"] = first_role.get("name")
+                        else:
+                            user["role"] = None
                     users.append(user)
-            
+
             return users
         except Exception as e:
             raise Exception(f"Error al listar usuarios: {str(e)}")
@@ -166,15 +175,23 @@ class RoleService:
             Datos del usuario con sus roles
         """
         try:
-            response = self.supabase.table("profiles").select("id, email, full_name, role, created_at").eq("id", user_id).execute()
-            
+            response = self.supabase.table("profiles").select("id, email, full_name, role_id, created_at").eq("id", user_id).execute()
+
             if not response.data:
                 raise Exception("Usuario no encontrado")
-            
+
             user = response.data[0]
             roles = await self.get_user_roles(user_id)
             user["roles"] = roles
-            
+
+            # Agregar el nombre del rol en `role` para compatibilidad
+            if roles and isinstance(roles, list) and len(roles) > 0:
+                first_role = roles[0]
+                if isinstance(first_role, dict):
+                    user["role"] = first_role.get("name")
+            else:
+                user["role"] = None
+
             return user
         except Exception as e:
             raise Exception(f"Error al obtener usuario: {str(e)}")
@@ -195,16 +212,16 @@ class RoleService:
             role_response = self.supabase.table("roles").select("*").eq("id", new_role_id).execute()
             if not role_response.data:
                 raise Exception("Rol no encontrado")
-            
+
             role = role_response.data[0]
             role_name = role.get("name")
-            
-            # Actualizar el rol directamente en profiles
-            update_response = self.supabase.table("profiles").update({"role": role_name}).eq("id", user_id).execute()
-            
+
+            # Actualizar el role_id directamente en profiles
+            update_response = self.supabase.table("profiles").update({"role_id": new_role_id}).eq("id", user_id).execute()
+
             if update_response.data:
-                return {"message": "Rol actualizado exitosamente"}
-            
+                return {"message": "Rol actualizado exitosamente", "role": role_name}
+
             raise Exception("Error al actualizar rol")
         except Exception as e:
             raise Exception(f"Error al actualizar rol: {str(e)}")

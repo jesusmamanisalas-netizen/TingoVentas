@@ -41,7 +41,12 @@ class RoleService:
         try:
             response = self.supabase.table("user_roles").select("*, roles(*)").eq("user_id", user_id).execute()
             if response.data:
-                return [item.get("roles") for item in response.data if item.get("roles")]
+                roles_list = []
+                for item in response.data:
+                    role_data = item.get("roles")
+                    if role_data and isinstance(role_data, dict):
+                        roles_list.append(role_data)
+                return roles_list
             return []
         except Exception as e:
             raise Exception(f"Error al obtener roles del usuario: {str(e)}")

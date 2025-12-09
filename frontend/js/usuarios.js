@@ -3,8 +3,8 @@
  * Maneja la visualización, edición y gestión de usuarios y roles
  */
 
-// Configuración
-const API_BASE_URL = window.APP_CONFIG?.API_BASE_URL || 'http://localhost:8000/api';
+// Configuración (desde config.js)
+const API_BASE_URL_USUARIOS = window.APP_CONFIG?.API_BASE_URL || 'http://localhost:8000/api';
 
 // Variables globales
 let usuarios = [];
@@ -54,7 +54,7 @@ async function loadUsuarios() {
         document.getElementById('content').classList.add('hidden');
         document.getElementById('error-state').classList.add('hidden');
 
-        const response = await fetch(`${API_BASE_URL}/roles/usuarios`, {
+        const response = await fetch(`${API_BASE_URL_USUARIOS}/roles/usuarios`, {
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
@@ -100,7 +100,7 @@ async function loadRoles() {
     }
 
     try {
-        const response = await fetch(`${API_BASE_URL}/roles/listar`, {
+        const response = await fetch(`${API_BASE_URL_USUARIOS}/roles/listar`, {
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
@@ -208,7 +208,7 @@ async function saveUserRole() {
     }
 
     try {
-        const response = await fetch(`${API_BASE_URL}/roles/usuarios/${currentEditingUserId}/rol`, {
+        const response = await fetch(`${API_BASE_URL_USUARIOS}/roles/usuarios/${currentEditingUserId}/rol`, {
             method: 'PUT',
             headers: {
                 'Authorization': `Bearer ${token}`,
@@ -244,7 +244,7 @@ async function openDetailModal(userId) {
     }
 
     try {
-        const response = await fetch(`${API_BASE_URL}/roles/usuarios/${userId}`, {
+        const response = await fetch(`${API_BASE_URL_USUARIOS}/roles/usuarios/${userId}`, {
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
@@ -339,7 +339,7 @@ async function logout() {
     
     try {
         if (token) {
-            await fetch(`${API_BASE_URL}/auth/logout`, {
+            await fetch(`${API_BASE_URL_USUARIOS}/auth/logout`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`,

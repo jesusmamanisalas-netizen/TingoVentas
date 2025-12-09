@@ -3,8 +3,14 @@
  * Maneja login, registro, logout y recuperación de contraseña
  */
 
-// Cargar configuración
-const API_BASE_URL = window.APP_CONFIG?.API_BASE_URL || 'http://localhost:8000/api';
+// Cargar configuración (solo si no está ya cargada)
+if (typeof window.APP_CONFIG === 'undefined') {
+    window.APP_CONFIG = {
+        API_BASE_URL: 'https://tingoventas.onrender.com/api'
+    };
+}
+
+const API_BASE_URL = window.APP_CONFIG.API_BASE_URL || 'http://localhost:8000/api';
 
 // Verificar autenticación al cargar
 document.addEventListener('DOMContentLoaded', () => {

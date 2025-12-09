@@ -97,6 +97,36 @@ class RoleResponse(BaseModel):
     description: Optional[str] = None
     created_at: Optional[str] = None
 
+# ========== USER SCHEMAS ==========
+
+class UserRoleResponse(BaseModel):
+    """Respuesta de rol de usuario"""
+    id: str
+    name: str
+    description: Optional[str] = None
+
+class UserResponse(BaseModel):
+    """Respuesta de usuario"""
+    id: str
+    email: str
+    full_name: str
+    role: Optional[str] = None
+    roles: Optional[List[UserRoleResponse]] = None
+    created_at: Optional[str] = None
+
+class UserListResponse(BaseModel):
+    """Respuesta con lista de usuarios"""
+    users: List[UserResponse]
+    total: int
+
+class UpdateUserRoleRequest(BaseModel):
+    """Esquema para actualizar rol de usuario"""
+    role_id: str
+
+class RemoveUserRoleRequest(BaseModel):
+    """Esquema para remover rol de usuario"""
+    role_id: str
+
 # ========== AUDIT SCHEMAS ==========
 
 class AuditLogResponse(BaseModel):

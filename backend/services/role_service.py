@@ -22,7 +22,9 @@ class RoleService:
         """
         try:
             response = self.supabase.table("roles").select("*").execute()
-            return response.data if response.data else []
+            if response.data:
+                return response.data  # type: ignore
+            return []
         except Exception as e:
             raise Exception(f"Error al listar roles: {str(e)}")
     
@@ -118,4 +120,90 @@ class RoleService:
         
         # Verificar rol específico
         return required_role in user_roles
+    
+    async def list_users(self) -> List[Dict[str, Any]]:
+        """
+        Lista todos los usuarios con sus roles
+        
+        Returns:
+            Lista de usuarios con sus roles
+        """
+        try:
+            response = self.supabase.table("profiles").select("id, email, full_name, role, created_at").execute()
+            if not response.data:
+                return []
+            
+            # Enriquecer cada usuario con sus roles
+            users: List[Dict[str, Any]] = []
+            for user in response.data:
+                if isinstance(user, dict):
+                    user_id = user.get("id")
+                    if user_id:
+                        roles = await self.get_user_roles(str(user_id))
+                        user["roles"] = roles
+                    users.append(user)
+            
+            return users
+        except Exception as e:
+            raise Exception(f"Error al listar usuarios: {str(e)}")
+    
+    async def get_user(self, user_id: str) -> Dict[str, Any]:
+        """
+        Obtiene los detalles de un usuario con sus roles
+        
+        Args:
+            user_id: ID del usuario
+            
+        Returns:
+            Datos del usuario con sus roles
+        """
+        try:
+            response = self.supabase.table("profiles").select("id, email, full_name, role, created_at").eq("id", user_id).execute()
+            
+            if not response.data:
+                raise Exception("Usuario no encontrado")
+            
+            user = response.data[0]
+            roles = await self.get_user_roles(user_id)
+            user["roles"] = roles
+            
+            return user
+        except Exception as e:
+            raise Exception(f"Error al obtener usuario: {str(e)}")
+    
+    async def update_user_role(self, user_id: str, new_role_id: str) -> Dict[str, Any]:
+        """
+        Actualiza el rol principal de un usuario (remueve anterior y asigna nuevo)
+        
+        Args:
+            user_id: ID del usuario
+            new_role_id: ID del nuevo rol
+            
+        Returns:
+            Confirmación de actualización
+        """
+        try:
+            # Verificar que el rol existe
+            role_response = self.supabase.table("roles").select("*").eq("id", new_role_id).execute()
+            if not role_response.data:
+                raise Exception("Rol no encontrado")
+            
+            # Obtener roles actuales del usuario
+            current_roles = self.supabase.table("user_roles").select("*").eq("user_id", user_id).execute()
+            
+            # Remover todos los roles anteriores
+            if current_roles.data:
+                for role in current_roles.data:
+                    await self.remove_role(user_id, role.get("role_id"))
+            
+            # Asignar nuevo rol
+            result = await self.assign_role(user_id, new_role_id)
+            
+            return {
+                "message": "Rol actualizado exitosamente",
+                "result": result
+            }
+        except Exception as e:
+            raise Exception(f"Error al actualizar rol: {str(e)}")
+
 

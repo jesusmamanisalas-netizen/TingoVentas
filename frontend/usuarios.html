@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Usuarios - Tingo Ventas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="config/supabaseClient.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/auth.js"></script>
+</head>
+<body class="bg-gray-50">
+    <!-- Navbar -->
+    <nav class="bg-white shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-8">
+                    <div class="text-2xl font-bold text-blue-600">TingoVentas</div>
+                    <div class="hidden md:flex space-x-4">
+                        <a href="dashboard.html" class="text-gray-600 hover:text-gray-900">Dashboard</a>
+                        <a href="productos.html" class="text-gray-600 hover:text-gray-900">Productos</a>
+                        <a href="usuarios.html" class="text-blue-600 font-semibold">Usuarios</a>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span id="user-name">Usuario</span>
+                    <button onclick="logout()" class="text-gray-600 hover:text-gray-900">Logout</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-800">Gestión de Usuarios</h1>
+            <p class="text-gray-600 mt-2">Administra usuarios y asigna roles</p>
+        </div>
+
+        <!-- Usuarios List -->
+        <div class="bg-white rounded-lg shadow">
+            <!-- Loading State -->
+            <div id="loading" class="flex items-center justify-center h-64">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            </div>
+
+            <!-- Content -->
+            <div id="content" class="hidden">
+                <!-- Tabla de usuarios -->
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-50 border-b">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Email</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Nombre</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Rol Actual</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Fecha Registro</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usuarios-tbody" class="divide-y">
+                            <!-- Los usuarios se cargarán aquí -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Empty State -->
+                <div id="empty-state" class="text-center py-12 hidden">
+                    <p class="text-gray-500">No hay usuarios disponibles</p>
+                </div>
+            </div>
+
+            <!-- Error State -->
+            <div id="error-state" class="hidden p-6">
+                <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                    <p id="error-message" class="text-red-700">Error al cargar los usuarios</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para actualizar rol -->
+    <div id="role-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-lg p-6 max-w-md w-full mx-4">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">Actualizar Rol de Usuario</h2>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Email del usuario</label>
+                <p id="modal-user-email" class="text-gray-900 font-medium"></p>
+            </div>
+
+            <div class="mb-6">
+                <label for="role-select" class="block text-sm font-medium text-gray-700 mb-2">Seleccionar Rol</label>
+                <select id="role-select" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <option value="">Cargando roles...</option>
+                </select>
+            </div>
+
+            <div class="flex space-x-3">
+                <button onclick="closeRoleModal()" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                    Cancelar
+                </button>
+                <button onclick="saveUserRole()" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                    Actualizar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para ver detalles -->
+    <div id="detail-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-lg p-6 max-w-md w-full mx-4">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">Detalles del Usuario</h2>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Email</label>
+                    <p id="detail-email" class="text-gray-900 mt-1"></p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Nombre Completo</label>
+                    <p id="detail-name" class="text-gray-900 mt-1"></p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Rol Actual</label>
+                    <p id="detail-role" class="text-gray-900 mt-1"></p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Roles Asignados</label>
+                    <div id="detail-roles" class="mt-1 flex flex-wrap gap-2">
+                        <!-- Los roles se cargarán aquí -->
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Fecha de Registro</label>
+                    <p id="detail-created" class="text-gray-900 mt-1"></p>
+                </div>
+            </div>
+
+            <div class="mt-6">
+                <button onclick="closeDetailModal()" class="w-full px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/usuarios.js"></script>
+</body>
+</html>

@@ -18,6 +18,40 @@ let roles = [];
 let currentEditingUserId = null;
 
 /**
+ * Verificar que el usuario actual es administrador
+ * Hace una petición al backend para validar el rol
+ */
+async function checkAdminAccess(token) {
+    try {
+        // Intentar acceder a un endpoint que requiere admin
+        // Si no es admin, recibiremos 403
+        const response = await fetch(`${getApiBaseUrl()}/roles/listar`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        // Si recibimos 403, no es admin
+        if (response.status === 403) {
+            return false;
+        }
+
+        // Si recibimos 401, token inválido
+        if (response.status === 401) {
+            return false;
+        }
+
+        // Si la petición fue exitosa, es admin
+        return response.ok;
+    } catch (error) {
+        console.error('Error verificando acceso admin:', error);
+        return false;
+    }
+}
+
+/**
  * Cargar datos al inicializar la página
  */
 document.addEventListener('DOMContentLoaded', async () => {
@@ -25,6 +59,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     if (!token) {
         window.location.href = 'login.html';
+        return;
+    }
+
+    // Verificar que el usuario es admin
+    try {
+        const isAdmin = await checkAdminAccess(token);
+        if (!isAdmin) {
+            alert('Acceso denegado: Solo administradores pueden acceder a esta página');
+            window.location.href = 'dashboard.html';
+            return;
+        }
+    } catch (error) {
+        console.error('Error verificando acceso admin:', error);
+        window.location.href = 'dashboard.html';
         return;
     }
 

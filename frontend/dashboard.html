@@ -116,6 +116,33 @@
 
     <script src="js/config.js"></script>
     <script src="js/auth.js"></script>
+    <script>
+        // Ocultar link a Usuarios si no es admin
+        document.addEventListener('DOMContentLoaded', () => {
+            const usuariosLink = document.querySelector('a[href="usuarios.html"]');
+            if (usuariosLink) {
+                const token = localStorage.getItem('access_token');
+                if (!token) {
+                    usuariosLink.style.display = 'none';
+                    return;
+                }
+                
+                // Verificar rol haciendo una petición simple
+                fetch(`${window.APP_CONFIG?.API_BASE_URL || 'http://localhost:8000/api'}/roles/listar`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                }).then(res => {
+                    if (res.status === 403 || res.status === 401) {
+                        usuariosLink.style.display = 'none';
+                    }
+                }).catch(() => {
+                    usuariosLink.style.display = 'none';
+                });
+            }
+        });
+    </script>
     <script type="module" src="js/dashboard.js"></script>
 </body>
 </html>

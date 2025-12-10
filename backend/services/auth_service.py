@@ -108,32 +108,37 @@ class AuthService:
             
             user = response.user
             
-            # Determinar el role_id por defecto ('usuario') si existe
-            role_id = None
+            # Determinar el role_id por defecto ('usuario')
+            # Si no existe el rol, intentar con ID = 2 (asumiendo que 2 es 'usuario')
+            role_id = 2  # Valor por defecto seguro
             try:
                 roles_response = self.service_supabase.table("roles").select("id").eq("name", "usuario").execute()
                 if roles_response.data and len(roles_response.data) > 0:
                     role_id = roles_response.data[0].get("id")
+                    print(f"Role encontrado: {role_id}")
+                else:
+                    print(f"Rol 'usuario' no encontrado, usando role_id = 2")
             except Exception as e:
-                print(f"Error al obtener rol por defecto: {str(e)}")
-                role_id = None
+                print(f"Error al obtener rol por defecto: {str(e)}, usando role_id = 2")
 
-            # Crear perfil en la tabla profiles usando role_id (si está disponible)
+            # Crear perfil en la tabla profiles con role_id requerido
             profile_data = {
                 "id": user.id,
                 "email": user.email,
-                "full_name": full_name,
+                "full_name": full_name or email.split('@')[0],  # Usar email antes del @ si no hay nombre
+                "role_id": role_id,  # Siempre incluir role_id
                 "created_at": datetime.utcnow().isoformat()
             }
-            if role_id is not None:
-                profile_data["role_id"] = role_id
 
             # Usar service key para crear el perfil
             try:
+                print(f"Intentando insertar perfil: {profile_data}")
                 insert_response = self.service_supabase.table("profiles").insert(profile_data).execute()
                 print(f"Perfil creado exitosamente: {insert_response.data}")
             except Exception as profile_error:
-                print(f"Error al crear perfil: {str(profile_error)}")
+                print(f"Error detallado al crear perfil: {str(profile_error)}")
+                import traceback
+                traceback.print_exc()
                 # Si falla crear el perfil, al menos el usuario se registró en Auth
                 print(f"Datos que se intentaron insertar: {profile_data}")
                 raise Exception(f"Error al crear perfil: {str(profile_error)}")
@@ -148,6 +153,9 @@ class AuthService:
             }
         except Exception as e:
             print(f"Error completo en registro: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            raise Exception(f"Error en registro: {str(e)}")
             import traceback
             traceback.print_exc()
             raise Exception(f"Error en registro: {str(e)}")

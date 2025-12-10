@@ -10,8 +10,6 @@ if (typeof window.APP_CONFIG === 'undefined') {
     };
 }
 
-const API_BASE_URL = window.APP_CONFIG.API_BASE_URL || 'https://tingoventas.onrender.com/api';
-
 // Declarar allProducts como global
 window.allProducts = [];
 
@@ -33,8 +31,8 @@ async function loadPublicProducts() {
         productsGrid.innerHTML = '';
         noProducts.classList.add('hidden');
         
-        console.log('[TIENDA] Cargando productos desde:', `${API_BASE_URL}/productos/publicos`);
-        const response = await fetch(`${API_BASE_URL}/productos/publicos`, {
+        console.log('[TIENDA] Cargando productos desde:', `${window.APP_CONFIG.API_BASE_URL}/productos/publicos`);
+        const response = await fetch(`${window.APP_CONFIG.API_BASE_URL}/productos/publicos`, {
             headers: {
                 'Content-Type': 'application/json'
             }
@@ -131,7 +129,7 @@ function renderProducts(products) {
  */
 async function loadCategories() {
     try {
-        const response = await fetch(`${API_BASE_URL}/productos/categorias`);
+        const response = await fetch(`${window.APP_CONFIG.API_BASE_URL}/productos/categorias`);
         if (!response.ok) return;
         
         const categories = await response.json();

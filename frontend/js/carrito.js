@@ -4,7 +4,6 @@
  */
 
 const CART_STORAGE_KEY = 'shopping_cart';
-const API_BASE_URL = window.APP_CONFIG?.API_BASE_URL || 'http://localhost:8000/api';
 
 /**
  * Obtener carrito actual del LocalStorage

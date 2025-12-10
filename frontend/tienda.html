@@ -28,10 +28,10 @@
                     </div>
                 </div>
                 <div class="flex items-center space-x-4">
-                    <a href="#" onclick="openCartOrLogin(); return false;" class="relative text-gray-600 hover:text-blue-600">
+                    <button id="cart-icon-btn" class="relative text-gray-600 hover:text-blue-600 bg-transparent border-none cursor-pointer">
                         <i class="fas fa-shopping-cart text-2xl"></i>
                         <span id="cart-count-badge" class="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center hidden">0</span>
-                    </a>
+                    </button>
                     <a href="login.html" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
                         <i class="fas fa-sign-in-alt mr-2"></i>Iniciar Sesión
                     </a>
@@ -90,14 +90,23 @@
         </div>
     </div>
 
-    <!-- 🚀 Agregar Supabase CDN (OBLIGATORIO) -->
+    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- Tus scripts JS -->
     <script src="js/config.js"></script>
     <script src="js/carrito.js"></script>
-    <!-- 🚀 Tu cliente Supabase -->
     <script src="config/supabaseClient.js"></script>
     <script src="js/tienda-public.js"></script>
-    <script src="js/tienda.js"></script>
+    <script>
+        // Manejador del icono del carrito
+        document.addEventListener('DOMContentLoaded', () => {
+            const cartBtn = document.getElementById('cart-icon-btn');
+            if (cartBtn) {
+                cartBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    openCartOrLogin();
+                });
+            }
+        });
+    </script>
 </body>
 </html>

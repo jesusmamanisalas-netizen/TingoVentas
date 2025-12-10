@@ -42,27 +42,45 @@ class AuthService:
             # Obtener perfil del usuario
             profile = self._get_user_profile(user.id)
             
-            # Crear token JWT personalizado
+            # Crear token JWT personalizado con role_id del perfil
+            role_name = "usuario"
+            role_id = None
+            if profile:
+                role_id = profile.get("role_id")
+                # Obtener el nombre del rol si existe role_id
+                if role_id:
+                    try:
+                        role_response = self.service_supabase.table("roles").select("name").eq("id", role_id).execute()
+                        if role_response.data:
+                            role_name = role_response.data[0].get("name", "usuario")
+                    except Exception:
+                        role_name = "usuario"
+            
             token_data = {
                 "sub": user.id,
                 "email": user.email,
-                "role": profile.get("role", "usuario") if profile else "usuario"
+                "role": role_name
             }
             access_token = create_access_token(token_data)
             
-            return {
+            result = {
                 "access_token": access_token,
                 "token_type": "bearer",
                 "user": {
                     "id": user.id,
                     "email": user.email,
                     "profile": profile
-                },
-                "session": {
+                }
+            }
+            
+            # Solo agregar session si existe
+            if session:
+                result["session"] = {
                     "access_token": session.access_token,
                     "refresh_token": session.refresh_token
                 }
-            }
+            
+            return result
         except Exception as e:
             raise Exception(f"Error en login: {str(e)}")
     
@@ -86,7 +104,7 @@ class AuthService:
             })
             
             if not response.user:
-                raise Exception("Error al crear usuario")
+                raise Exception("Error al crear usuario en Supabase Auth")
             
             user = response.user
             
@@ -96,7 +114,8 @@ class AuthService:
                 roles_response = self.service_supabase.table("roles").select("id").eq("name", "usuario").execute()
                 if roles_response.data and len(roles_response.data) > 0:
                     role_id = roles_response.data[0].get("id")
-            except Exception:
+            except Exception as e:
+                print(f"Error al obtener rol por defecto: {str(e)}")
                 role_id = None
 
             # Crear perfil en la tabla profiles usando role_id (si está disponible)
@@ -110,7 +129,14 @@ class AuthService:
                 profile_data["role_id"] = role_id
 
             # Usar service key para crear el perfil
-            self.service_supabase.table("profiles").insert(profile_data).execute()
+            try:
+                insert_response = self.service_supabase.table("profiles").insert(profile_data).execute()
+                print(f"Perfil creado exitosamente: {insert_response.data}")
+            except Exception as profile_error:
+                print(f"Error al crear perfil: {str(profile_error)}")
+                # Si falla crear el perfil, al menos el usuario se registró en Auth
+                print(f"Datos que se intentaron insertar: {profile_data}")
+                raise Exception(f"Error al crear perfil: {str(profile_error)}")
             
             return {
                 "user": {
@@ -121,6 +147,9 @@ class AuthService:
                 "message": "Usuario registrado exitosamente"
             }
         except Exception as e:
+            print(f"Error completo en registro: {str(e)}")
+            import traceback
+            traceback.print_exc()
             raise Exception(f"Error en registro: {str(e)}")
     
     async def logout(self, access_token: str) -> Dict[str, Any]:

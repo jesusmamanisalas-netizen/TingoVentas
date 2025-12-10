@@ -60,6 +60,7 @@ async function login(email, password) {
         // Guardar token
         localStorage.setItem('access_token', data.access_token);
         localStorage.setItem('user', JSON.stringify(data.user));
+        localStorage.setItem('user_data', JSON.stringify(data.user));
 
         return data;
     } catch (error) {
@@ -219,17 +220,54 @@ if (document.getElementById('register-form')) {
     document.getElementById('register-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         
-        const name = document.getElementById('reg-name').value;
-        const email = document.getElementById('reg-email').value;
+        const name = document.getElementById('reg-name').value.trim();
+        const email = document.getElementById('reg-email').value.trim();
         const password = document.getElementById('reg-password').value;
+        const regBtn = e.target.querySelector('button[type="submit"]');
+        const originalBtnText = regBtn.innerHTML;
+        
+        // Validación básica
+        if (!name || name.length < 2) {
+            alert('Por favor ingresa un nombre válido (mínimo 2 caracteres)');
+            return;
+        }
+        
+        if (!email) {
+            alert('Por favor ingresa un correo válido');
+            return;
+        }
+        
+        if (!password || password.length < 6) {
+            alert('La contraseña debe tener al menos 6 caracteres');
+            return;
+        }
+        
+        regBtn.disabled = true;
+        regBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Registrando...';
         
         try {
-            await register(email, password, name);
+            console.log('Enviando registro:', { email, full_name: name });
+            const result = await register(email, password, name);
+            console.log('Registro exitoso:', result);
             alert('Usuario registrado exitosamente. Por favor, inicia sesión.');
             document.getElementById('register-modal').classList.add('hidden');
             document.getElementById('register-form').reset();
+            // Opcional: Auto-login después del registro
+            // Descomentar si quieres auto-loguear después del registro
+            // try {
+            //     const loginData = await login(email, password);
+            //     localStorage.setItem('access_token', loginData.access_token);
+            //     localStorage.setItem('user_data', JSON.stringify(loginData.user));
+            //     window.location.href = 'dashboard.html';
+            // } catch (e) {
+            //     console.log('Auto-login no disponible, usuario debe iniciar sesión manualmente');
+            // }
         } catch (error) {
+            console.error('Error de registro:', error);
             alert('Error: ' + error.message);
+        } finally {
+            regBtn.disabled = false;
+            regBtn.innerHTML = originalBtnText;
         }
     });
 }

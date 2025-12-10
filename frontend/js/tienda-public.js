@@ -15,6 +15,23 @@ document.addEventListener('DOMContentLoaded', () => {
     setupSearchAndFilters();
     updateCartBadge();
     
+    // Event delegation para botones "Agregar al carrito"
+    document.addEventListener('click', (e) => {
+        if (e.target.closest('.add-to-cart-btn')) {
+            const btn = e.target.closest('.add-to-cart-btn');
+            const productJson = btn.getAttribute('data-product');
+            if (productJson) {
+                try {
+                    const product = JSON.parse(productJson);
+                    addProductToCart(product);
+                } catch (err) {
+                    console.error('Error al parsear producto:', err);
+                    alert('Error: No se puede agregar al carrito');
+                }
+            }
+        }
+    });
+    
     // Escuchar cambios en el carrito
     window.addEventListener('cartUpdated', updateCartBadge);
 });
@@ -105,8 +122,7 @@ function renderProducts(products) {
                         `<button disabled class="w-full px-4 py-2 bg-gray-300 text-gray-600 rounded-lg font-medium cursor-not-allowed">
                             <i class="fas fa-shopping-cart mr-2"></i>Agotado
                         </button>` :
-                        `<button onclick="addProductToCart(${JSON.stringify(product).replace(/"/g, '&quot;')})" 
-                            class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition">
+                        `<button class="add-to-cart-btn flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition" data-product-id="${product.id}">
                             <i class="fas fa-shopping-cart mr-2"></i>Carrito
                         </button>
                         <a href="login.html" 
@@ -183,31 +199,52 @@ function filterProducts() {
 
 /**
  * Agregar producto al carrito desde la tienda pública
+ * Usa event delegation para los botones
  */
-function addProductToCart(product) {
-    if (!product.id) {
-        alert('Error: Producto inválido');
-        return;
-    }
-    
-    // Validar stock
-    if (product.current_stock < 1) {
-        alert('Este producto no tiene stock disponible');
-        return;
-    }
-    // Si el usuario no está autenticado, pedir que inicie sesión antes
-    const token = localStorage.getItem('access_token');
-    if (!token) {
-        // Llevar al login para que inicie sesión
-        window.location.href = 'login.html';
-        return;
-    }
+document.addEventListener('DOMContentLoaded', () => {
+    const productsGrid = document.getElementById('products-grid');
+    if (productsGrid) {
+        productsGrid.addEventListener('click', (e) => {
+            const btn = e.target.closest('.add-to-cart-btn');
+            if (!btn) return;
 
-    // Agregar 1 unidad al carrito
-    if (addToCart(product, 1)) {
-        // Ya muestra alerta en carrito.js
+            const productId = parseInt(btn.getAttribute('data-product-id'));
+            if (!productId) {
+                alert('Error: Producto inválido');
+                return;
+            }
+
+            // Buscar el producto en allProducts
+            const product = allProducts.find(p => p.id === productId);
+            if (!product) {
+                alert('Error: Producto no encontrado');
+                return;
+            }
+
+            // Si el usuario no está autenticado, pedir que inicie sesión antes
+            const token = localStorage.getItem('access_token');
+            if (!token) {
+                // Llevar al login para que inicie sesión
+                window.location.href = 'login.html';
+                return;
+            }
+
+            // Validar stock
+            if (!product.current_stock || product.current_stock < 1) {
+                alert('Este producto no tiene stock disponible');
+                return;
+            }
+
+            // Agregar 1 unidad al carrito
+            if (typeof addToCart === 'function') {
+                addToCart(product, 1);
+            } else {
+                console.error('addToCart no está definida');
+                alert('Error: No se puede agregar al carrito');
+            }
+        });
     }
-}
+});
 
 /**
  * Escapar caracteres HTML

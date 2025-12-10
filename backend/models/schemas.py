@@ -2,7 +2,7 @@
 Esquemas Pydantic para validación de datos
 """
 from pydantic import BaseModel, EmailStr, Field
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any, List, Union
 from datetime import datetime
 
 # ========== AUTH SCHEMAS ==========
@@ -66,7 +66,7 @@ class ProductUpdate(BaseModel):
 
 class ProductResponse(BaseModel):
     """Respuesta de producto"""
-    id: str
+    id: Union[str, int]
     name: str
     description: Optional[str]
     Sku: Optional[str] = None
@@ -92,7 +92,7 @@ class RoleAssignRequest(BaseModel):
 
 class RoleResponse(BaseModel):
     """Respuesta de rol"""
-    id: str
+    id: Union[str, int]
     name: str
     description: Optional[str] = None
     created_at: Optional[str] = None
@@ -101,13 +101,13 @@ class RoleResponse(BaseModel):
 
 class UserRoleResponse(BaseModel):
     """Respuesta de rol de usuario"""
-    id: str
+    id: Union[str, int]
     name: str
     description: Optional[str] = None
 
 class UserResponse(BaseModel):
     """Respuesta de usuario"""
-    id: str
+    id: Union[str, int]
     email: str
     full_name: str
     role: Optional[str] = None
@@ -131,8 +131,8 @@ class RemoveUserRoleRequest(BaseModel):
 
 class AuditLogResponse(BaseModel):
     """Respuesta de registro de auditoría"""
-    id: str
-    user_id: str
+    id: Union[str, int]
+    user_id: Union[str, int]
     action: str
     resource: str
     details: Dict[str, Any]

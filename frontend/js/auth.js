@@ -3,14 +3,13 @@
  * Maneja login, registro, logout y recuperación de contraseña
  */
 
-// Cargar configuración (solo si no está ya cargada)
+// Cargar configuración (desde config.js)
+// No redeclarar API_BASE_URL aquí; usar window.APP_CONFIG directamente
 if (typeof window.APP_CONFIG === 'undefined') {
     window.APP_CONFIG = {
         API_BASE_URL: 'https://tingoventas.onrender.com/api'
     };
 }
-
-const API_BASE_URL = window.APP_CONFIG.API_BASE_URL || 'http://localhost:8000/api';
 
 // Verificar autenticación al cargar
 document.addEventListener('DOMContentLoaded', () => {
@@ -44,7 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
  */
 async function login(email, password) {
     try {
-        const response = await fetch(`${API_BASE_URL}/auth/login`, {
+        const response = await fetch(`${window.APP_CONFIG.API_BASE_URL}/auth/login`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -73,7 +72,7 @@ async function login(email, password) {
  */
 async function register(email, password, fullName) {
     try {
-        const response = await fetch(`${API_BASE_URL}/auth/register`, {
+        const response = await fetch(`${window.APP_CONFIG.API_BASE_URL}/auth/register`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -101,7 +100,7 @@ async function logout() {
         const token = localStorage.getItem('access_token');
         
         if (token) {
-            await fetch(`${API_BASE_URL}/auth/logout`, {
+            await fetch(`${window.APP_CONFIG.API_BASE_URL}/auth/logout`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -130,7 +129,7 @@ async function logout() {
  */
 async function passwordRecovery(email) {
     try {
-        const response = await fetch(`${API_BASE_URL}/auth/password-recovery`, {
+        const response = await fetch(`${window.APP_CONFIG.API_BASE_URL}/auth/password-recovery`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

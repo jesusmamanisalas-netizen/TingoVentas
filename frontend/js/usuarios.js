@@ -3,8 +3,14 @@
  * Maneja la visualización, edición y gestión de usuarios y roles
  */
 
-// Configuración (desde config.js)
-const API_BASE_URL_USUARIOS = window.APP_CONFIG?.API_BASE_URL || 'http://localhost:8000/api';
+// Usar configuración global de APP_CONFIG (desde config.js)
+// Si no existe, usar URL local para desarrollo
+function getApiBaseUrl() {
+    if (typeof window.APP_CONFIG !== 'undefined' && window.APP_CONFIG.API_BASE_URL) {
+        return window.APP_CONFIG.API_BASE_URL;
+    }
+    return 'http://localhost:8000/api';
+}
 
 // Variables globales
 let usuarios = [];
@@ -54,7 +60,7 @@ async function loadUsuarios() {
         document.getElementById('content').classList.add('hidden');
         document.getElementById('error-state').classList.add('hidden');
 
-        const response = await fetch(`${API_BASE_URL_USUARIOS}/roles/usuarios`, {
+        const response = await fetch(`${getApiBaseUrl()}/roles/usuarios`, {
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
@@ -100,7 +106,7 @@ async function loadRoles() {
     }
 
     try {
-        const response = await fetch(`${API_BASE_URL_USUARIOS}/roles/listar`, {
+        const response = await fetch(`${getApiBaseUrl()}/roles/listar`, {
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
@@ -208,7 +214,7 @@ async function saveUserRole() {
     }
 
     try {
-        const response = await fetch(`${API_BASE_URL_USUARIOS}/roles/usuarios/${currentEditingUserId}/rol`, {
+        const response = await fetch(`${getApiBaseUrl()}/roles/usuarios/${currentEditingUserId}/rol`, {
             method: 'PUT',
             headers: {
                 'Authorization': `Bearer ${token}`,
@@ -244,7 +250,7 @@ async function openDetailModal(userId) {
     }
 
     try {
-        const response = await fetch(`${API_BASE_URL_USUARIOS}/roles/usuarios/${userId}`, {
+        const response = await fetch(`${getApiBaseUrl()}/roles/usuarios/${userId}`, {
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'

@@ -4,6 +4,7 @@ Maneja las peticiones relacionadas con roles y permisos
 """
 from fastapi import APIRouter, HTTPException, Depends  # type: ignore[import]
 from typing import List, Dict, Any
+import logging
 from backend.models.schemas import (
     RoleAssignRequest, RoleResponse, MessageResponse, UserResponse,
     UpdateUserRoleRequest, RemoveUserRoleRequest
@@ -11,6 +12,9 @@ from backend.models.schemas import (
 from backend.services.role_service import RoleService
 from backend.services.audit_service import AuditService
 from backend.middlewares.auth_middleware import AuthMiddleware
+
+# Configurar logging
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/roles", tags=["Roles"])
 
@@ -27,10 +31,13 @@ async def list_roles(
     REQ_003: Gestión de roles y permisos
     """
     try:
+        logger.info(f"Listando roles solicitado por: {user.get('id')}")
         roles = await role_service.list_roles()
+        logger.info(f"Roles listados exitosamente: {len(roles)} roles")
         return roles
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Error al listar roles: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Error al listar roles: {str(e)}")
 
 @router.post("/asignar", response_model=MessageResponse)
 async def assign_role(
@@ -70,10 +77,13 @@ async def list_users(
     Solo accesible para administradores
     """
     try:
+        logger.info(f"Listando usuarios solicitado por: {user.get('id')}")
         users = await role_service.list_users()
+        logger.info(f"Usuarios listados exitosamente: {len(users)} usuarios")
         return users
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Error al listar usuarios: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Error al listar usuarios: {str(e)}")
 
 @router.get("/usuarios/{user_id}", response_model=UserResponse)
 async def get_user(
@@ -86,10 +96,13 @@ async def get_user(
     Solo accesible para administradores
     """
     try:
+        logger.info(f"Obteniendo detalles de usuario {user_id} solicitado por: {user.get('id')}")
         user_data = await role_service.get_user(user_id)
+        logger.info(f"Detalles de usuario {user_id} obtenidos exitosamente")
         return user_data
     except Exception as e:
-        raise HTTPException(status_code=404, detail=str(e))
+        logger.error(f"Error al obtener usuario {user_id}: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=404, detail=f"Error al obtener usuario: {str(e)}")
 
 @router.put("/usuarios/{user_id}/rol", response_model=MessageResponse)
 async def update_user_role(

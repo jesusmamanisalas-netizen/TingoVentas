@@ -21,7 +21,14 @@ class Config:
     JWT_EXPIRATION_HOURS = 24
     
     # CORS Configuration
-    CORS_ORIGINS = ["*"]  # En producción, especificar dominios permitidos
+    CORS_ORIGINS = [
+        "*",  # Desarrollo local
+        "http://localhost:3000",
+        "http://localhost:8080",
+        "http://localhost:5500",
+        "https://tingoventas-1.onrender.com",  # Frontend en Render
+        "https://tingoventas.onrender.com",     # Backend en Render (para requests internos)
+    ]
     
     # Storage Configuration
     STORAGE_BUCKET = "productos"  # Bucket de Supabase Storage para imágenes
@@ -29,7 +36,6 @@ class Config:
     # App Configuration
     APP_NAME = "Tingo Ventas"
     APP_VERSION = "1.0.0"
-    CORS_ORIGINS = ["*"]
 
     DEBUG = os.getenv("DEBUG", "False").lower() == "true"
 

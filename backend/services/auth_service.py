@@ -42,19 +42,22 @@ class AuthService:
             # Obtener perfil del usuario
             profile = self._get_user_profile(user.id)
             
+            # Validar que el usuario tiene perfil (debe existir en la tabla profiles)
+            if not profile:
+                raise Exception("Perfil de usuario no encontrado")
+            
             # Crear token JWT personalizado con role_id del perfil
             role_name = "usuario"
-            role_id = None
-            if profile:
-                role_id = profile.get("role_id")
-                # Obtener el nombre del rol si existe role_id
-                if role_id:
-                    try:
-                        role_response = self.service_supabase.table("roles").select("name").eq("id", role_id).execute()
-                        if role_response.data:
-                            role_name = role_response.data[0].get("name", "usuario")
-                    except Exception:
-                        role_name = "usuario"
+            role_id = profile.get("role_id", 2)  # Usar role_id del perfil
+            
+            # Obtener el nombre del rol si existe role_id
+            if role_id:
+                try:
+                    role_response = self.service_supabase.table("roles").select("name").eq("id", role_id).execute()
+                    if role_response.data:
+                        role_name = role_response.data[0].get("name", "usuario")
+                except Exception:
+                    role_name = "usuario"
             
             token_data = {
                 "sub": user.id,
@@ -99,7 +102,7 @@ class AuthService:
         try:
             print(f"[REGISTER] Iniciando registro para: {email}")
             
-            # Registrar en Supabase Auth
+            # Registrar en Supabase Auth sin confirmación de email
             # El trigger handle_new_user() en Supabase creará el perfil automáticamente
             response = self.supabase.auth.sign_up({
                 "email": email,
@@ -116,6 +119,8 @@ class AuthService:
             
             user = response.user
             print(f"[REGISTER] Usuario creado en Auth con id: {user.id}")
+            
+            # El trigger en Supabase crea el perfil automáticamente
             
             return {
                 "user": {

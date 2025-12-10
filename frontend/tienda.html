@@ -97,16 +97,71 @@
     <script src="config/supabaseClient.js"></script>
     <script src="js/tienda-public.js"></script>
     <script>
-        // Manejador del icono del carrito
-        document.addEventListener('DOMContentLoaded', () => {
+        // Inicializar todo después de que todos los scripts estén cargados
+        window.addEventListener('DOMContentLoaded', () => {
+            // Cargar productos
+            if (typeof loadPublicProducts === 'function') {
+                loadPublicProducts();
+            }
+            
+            // Configurar búsqueda y filtros
+            if (typeof setupSearchAndFilters === 'function') {
+                setupSearchAndFilters();
+            }
+            
+            // Actualizar badge del carrito
+            if (typeof updateCartBadge === 'function') {
+                updateCartBadge();
+                window.addEventListener('cartUpdated', updateCartBadge);
+            }
+            
+            // Manejador del icono del carrito
             const cartBtn = document.getElementById('cart-icon-btn');
-            if (cartBtn) {
+            if (cartBtn && typeof openCartOrLogin === 'function') {
                 cartBtn.addEventListener('click', (e) => {
                     e.preventDefault();
                     openCartOrLogin();
                 });
             }
-        });
+            
+            // Event delegation para botones "Agregar al carrito"
+            const productsGrid = document.getElementById('products-grid');
+            if (productsGrid) {
+                productsGrid.addEventListener('click', (e) => {
+                    const btn = e.target.closest('.add-to-cart-btn');
+                    if (!btn) return;
+
+                    const productId = parseInt(btn.getAttribute('data-product-id'));
+                    if (!productId) {
+                        alert('Error: Producto inválido');
+                        return;
+                    }
+
+                    const product = window.allProducts?.find(p => p.id === productId);
+                    if (!product) {
+                        alert('Error: Producto no encontrado');
+                        return;
+                    }
+
+                    const token = localStorage.getItem('access_token');
+                    if (!token) {
+                        window.location.href = 'login.html';
+                        return;
+                    }
+
+                    if (!product.current_stock || product.current_stock < 1) {
+                        alert('Este producto no tiene stock disponible');
+                        return;
+                    }
+
+                    if (typeof addToCart === 'function') {
+                        addToCart(product, 1);
+                    } else {
+                        alert('Error: No se puede agregar al carrito');
+                    }
+                });
+            }
+        }, { once: false });
     </script>
 </body>
 </html>

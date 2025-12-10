@@ -3,52 +3,37 @@
  * Carga productos públicos y permite agregar al carrito
  */
 
-const API_BASE_URL = window.APP_CONFIG?.API_BASE_URL || 'http://localhost:8000/api';
+// Asegurar que APP_CONFIG esté disponible
+if (typeof window.APP_CONFIG === 'undefined') {
+    window.APP_CONFIG = {
+        API_BASE_URL: 'https://tingoventas.onrender.com/api'
+    };
+}
 
-let allProducts = [];
+const API_BASE_URL = window.APP_CONFIG.API_BASE_URL || 'https://tingoventas.onrender.com/api';
+
+// Declarar allProducts como global
+window.allProducts = [];
 
 /**
  * Cargar productos públicos al inicializar
- */
-document.addEventListener('DOMContentLoaded', () => {
-    loadPublicProducts();
-    setupSearchAndFilters();
-    updateCartBadge();
-    
-    // Event delegation para botones "Agregar al carrito"
-    document.addEventListener('click', (e) => {
-        if (e.target.closest('.add-to-cart-btn')) {
-            const btn = e.target.closest('.add-to-cart-btn');
-            const productJson = btn.getAttribute('data-product');
-            if (productJson) {
-                try {
-                    const product = JSON.parse(productJson);
-                    addProductToCart(product);
-                } catch (err) {
-                    console.error('Error al parsear producto:', err);
-                    alert('Error: No se puede agregar al carrito');
-                }
-            }
-        }
-    });
-    
-    // Escuchar cambios en el carrito
-    window.addEventListener('cartUpdated', updateCartBadge);
-});
-
-/**
- * Cargar productos públicos desde el backend
  */
 async function loadPublicProducts() {
     const loading = document.getElementById('loading');
     const productsGrid = document.getElementById('products-grid');
     const noProducts = document.getElementById('no-products');
     
+    if (!loading || !productsGrid || !noProducts) {
+        console.error('[TIENDA] Elementos HTML no encontrados');
+        return;
+    }
+    
     try {
         loading.classList.remove('hidden');
         productsGrid.innerHTML = '';
         noProducts.classList.add('hidden');
         
+        console.log('[TIENDA] Cargando productos desde:', `${API_BASE_URL}/productos/publicos`);
         const response = await fetch(`${API_BASE_URL}/productos/publicos`, {
             headers: {
                 'Content-Type': 'application/json'
@@ -56,13 +41,15 @@ async function loadPublicProducts() {
         });
         
         if (!response.ok) {
-            throw new Error(`Error: ${response.status}`);
+            throw new Error(`Error ${response.status}: ${response.statusText}`);
         }
         
         const products = await response.json();
-        allProducts = products;
+        console.log('[TIENDA] Productos cargados:', products.length);
+        window.allProducts = products;
         
         if (products.length === 0) {
+            console.log('[TIENDA] No hay productos disponibles');
             noProducts.classList.remove('hidden');
             return;
         }
@@ -71,11 +58,12 @@ async function loadPublicProducts() {
         loadCategories();
         
     } catch (error) {
-        console.error('Error al cargar productos:', error);
+        console.error('[TIENDA] Error al cargar productos:', error);
         noProducts.classList.remove('hidden');
         noProducts.innerHTML = `
             <i class="fas fa-exclamation-triangle text-6xl text-red-300 mb-4"></i>
             <p class="text-xl text-red-600">Error al cargar productos</p>
+            <p class="text-sm text-gray-500 mt-2">${error.message}</p>
         `;
     } finally {
         loading.classList.add('hidden');
@@ -198,53 +186,16 @@ function filterProducts() {
 }
 
 /**
- * Agregar producto al carrito desde la tienda pública
- * Usa event delegation para los botones
+ * Actualizar badge del carrito en la navbar
  */
-document.addEventListener('DOMContentLoaded', () => {
-    const productsGrid = document.getElementById('products-grid');
-    if (productsGrid) {
-        productsGrid.addEventListener('click', (e) => {
-            const btn = e.target.closest('.add-to-cart-btn');
-            if (!btn) return;
-
-            const productId = parseInt(btn.getAttribute('data-product-id'));
-            if (!productId) {
-                alert('Error: Producto inválido');
-                return;
-            }
-
-            // Buscar el producto en allProducts
-            const product = allProducts.find(p => p.id === productId);
-            if (!product) {
-                alert('Error: Producto no encontrado');
-                return;
-            }
-
-            // Si el usuario no está autenticado, pedir que inicie sesión antes
-            const token = localStorage.getItem('access_token');
-            if (!token) {
-                // Llevar al login para que inicie sesión
-                window.location.href = 'login.html';
-                return;
-            }
-
-            // Validar stock
-            if (!product.current_stock || product.current_stock < 1) {
-                alert('Este producto no tiene stock disponible');
-                return;
-            }
-
-            // Agregar 1 unidad al carrito
-            if (typeof addToCart === 'function') {
-                addToCart(product, 1);
-            } else {
-                console.error('addToCart no está definida');
-                alert('Error: No se puede agregar al carrito');
-            }
-        });
+function updateCartBadge() {
+    const badge = document.getElementById('cart-count-badge');
+    if (badge && typeof getCartItemCount === 'function') {
+        const count = getCartItemCount();
+        badge.textContent = count;
+        badge.style.display = count > 0 ? 'inline-flex' : 'none';
     }
-});
+}
 
 /**
  * Escapar caracteres HTML

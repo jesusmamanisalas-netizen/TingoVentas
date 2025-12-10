@@ -90,20 +90,27 @@ class AuthService:
             
             user = response.user
             
-            # Crear perfil en la tabla profiles
+            # Determinar el role_id por defecto ('usuario') si existe
+            role_id = None
+            try:
+                roles_response = self.service_supabase.table("roles").select("id").eq("name", "usuario").execute()
+                if roles_response.data and len(roles_response.data) > 0:
+                    role_id = roles_response.data[0].get("id")
+            except Exception:
+                role_id = None
+
+            # Crear perfil en la tabla profiles usando role_id (si está disponible)
             profile_data = {
                 "id": user.id,
                 "email": user.email,
                 "full_name": full_name,
-                "role": "usuario",  # Rol por defecto
                 "created_at": datetime.utcnow().isoformat()
             }
-            
+            if role_id is not None:
+                profile_data["role_id"] = role_id
+
             # Usar service key para crear el perfil
             self.service_supabase.table("profiles").insert(profile_data).execute()
-            
-            # Asignar rol por defecto
-            self._assign_default_role(user.id)
             
             return {
                 "user": {
@@ -192,22 +199,8 @@ class AuthService:
             return None
     
     def _assign_default_role(self, user_id: str):
-        """Asigna el rol por defecto 'usuario' al nuevo usuario"""
-        try:
-            # Buscar el rol 'usuario' en la tabla roles
-            roles_response = self.service_supabase.table("roles").select("id").eq("name", "usuario").execute()
-            
-            if roles_response.data and len(roles_response.data) > 0:
-                role_id = roles_response.data[0]["id"]
-                
-                # Asignar rol en user_roles
-                user_role_data = {
-                    "user_id": user_id,
-                    "role_id": role_id,
-                    "created_at": datetime.utcnow().isoformat()
-                }
-                self.service_supabase.table("user_roles").insert(user_role_data).execute()
-        except Exception:
-            # Si falla, continuar sin asignar rol (el sistema puede funcionar sin esto)
-            pass
+        """(Obsoleto) Antes se usaba una tabla user_roles; ahora usamos profiles.role_id.
+        Este método se mantiene como fallback pero no realiza cambios.
+        """
+        return
 

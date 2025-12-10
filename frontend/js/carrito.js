@@ -164,3 +164,17 @@ document.addEventListener('DOMContentLoaded', () => {
 window.addEventListener('cartUpdated', () => {
     updateCartBadge();
 });
+
+/**
+ * Abrir la página del carrito si el usuario está autenticado,
+ * o redirigir a la página de login si no lo está.
+ */
+function openCartOrLogin() {
+    const token = localStorage.getItem('access_token');
+    if (!token) {
+        // Redirigir al login para que el usuario inicie sesión
+        window.location.href = 'login.html';
+        return;
+    }
+    window.location.href = 'carrito.html';
+}

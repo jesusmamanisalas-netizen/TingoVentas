@@ -195,7 +195,14 @@ function addProductToCart(product) {
         alert('Este producto no tiene stock disponible');
         return;
     }
-    
+    // Si el usuario no está autenticado, pedir que inicie sesión antes
+    const token = localStorage.getItem('access_token');
+    if (!token) {
+        // Llevar al login para que inicie sesión
+        window.location.href = 'login.html';
+        return;
+    }
+
     // Agregar 1 unidad al carrito
     if (addToCart(product, 1)) {
         // Ya muestra alerta en carrito.js

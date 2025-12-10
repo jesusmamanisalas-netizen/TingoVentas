@@ -177,6 +177,36 @@
     <script src="js/config.js"></script>
     <script src="js/auth.js"></script>
     <script>
+        // Verificar acceso según rol: solo admin, vendedor, almacenero
+        document.addEventListener('DOMContentLoaded', () => {
+            const token = localStorage.getItem('access_token');
+            if (!token) {
+                window.location.href = 'tienda.html';
+                return;
+            }
+
+            function parseJwt(t) {
+                try {
+                    const payload = t.split('.')[1];
+                    const json = atob(payload.replace(/-/g, '+').replace(/_/g, '/'));
+                    return JSON.parse(decodeURIComponent(escape(json)));
+                } catch (e) {
+                    return null;
+                }
+            }
+
+            const data = parseJwt(token);
+            const role = data && (data.role || (data.profile && data.profile.role));
+            const allowed = ['admin', 'vendedor', 'almacenero'];
+
+            if (!role || !allowed.includes(role)) {
+                // No tiene permisos para acceder al panel de productos
+                window.location.href = 'tienda.html';
+                return;
+            }
+        });
+    </script>
+    <script>
         // Ocultar link a Usuarios si no es admin
         document.addEventListener('DOMContentLoaded', () => {
             const usuariosLink = document.querySelector('a[href="usuarios.html"]');

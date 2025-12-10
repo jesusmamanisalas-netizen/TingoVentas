@@ -78,7 +78,8 @@ function renderProducts(products) {
     productsGrid.innerHTML = '';
     
     products.forEach(product => {
-        const isOutOfStock = product.current_stock === 0 || product.current_stock < 1;
+        const currentStockNum = Number(product.current_stock || 0);
+        const isOutOfStock = currentStockNum === 0 || currentStockNum < 1;
         const card = document.createElement('div');
         card.className = 'bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition';
         card.innerHTML = `
@@ -99,9 +100,9 @@ function renderProducts(products) {
                 <p class="text-sm text-gray-600 mt-1 line-clamp-2">${escapeHtml(product.description || 'Sin descripción')}</p>
                 
                 <div class="mt-3 flex justify-between items-center">
-                    <span class="text-lg font-bold text-blue-600">$${product.price.toFixed(2)}</span>
+                    <span class="text-lg font-bold text-blue-600">$${Number(product.price).toFixed(2)}</span>
                     <span class="text-xs text-gray-500">
-                        ${isOutOfStock ? 'Sin stock' : `Stock: ${product.current_stock}`}
+                        ${isOutOfStock ? 'Sin stock' : `Stock: ${currentStockNum}`}
                     </span>
                 </div>
                 
@@ -176,8 +177,7 @@ function filterProducts() {
             (product.description && product.description.toLowerCase().includes(searchTerm)) ||
             (product.Sku && product.Sku.toLowerCase().includes(searchTerm)) ||
             (product.brand && product.brand.toLowerCase().includes(searchTerm));
-        
-        const matchesCategory = categoryId === '' || product.category_id === parseInt(categoryId);
+        const matchesCategory = categoryId === '' || String(product.category_id) === String(categoryId);
         
         return matchesSearch && matchesCategory;
     });

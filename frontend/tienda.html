@@ -131,25 +131,19 @@
                     const btn = e.target.closest('.add-to-cart-btn');
                     if (!btn) return;
 
-                    const productId = parseInt(btn.getAttribute('data-product-id'));
-                    if (!productId) {
+                    const productIdStr = btn.getAttribute('data-product-id');
+                    if (!productIdStr) {
                         alert('Error: Producto inválido');
                         return;
                     }
 
-                    const product = window.allProducts?.find(p => p.id === productId);
+                    const product = window.allProducts?.find(p => String(p.id) === productIdStr);
                     if (!product) {
                         alert('Error: Producto no encontrado');
                         return;
                     }
 
-                    const token = localStorage.getItem('access_token');
-                    if (!token) {
-                        window.location.href = 'login.html';
-                        return;
-                    }
-
-                    if (!product.current_stock || product.current_stock < 1) {
+                    if (!product.current_stock || Number(product.current_stock) < 1) {
                         alert('Este producto no tiene stock disponible');
                         return;
                     }

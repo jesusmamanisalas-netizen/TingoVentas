@@ -35,7 +35,7 @@ function addToCart(product, quantity = 1) {
     }
 
     // Validar stock
-    if (quantity > product.current_stock) {
+    if (quantity > Number(product.current_stock || 0)) {
         alert(`Stock insuficiente. Disponible: ${product.current_stock}`);
         return false;
     }
@@ -43,26 +43,26 @@ function addToCart(product, quantity = 1) {
     const cart = getCart();
     
     // Buscar si el producto ya existe
-    const existingItem = cart.find(item => item.id === product.id);
+    const existingItem = cart.find(item => String(item.id) === String(product.id));
     
     if (existingItem) {
         // Si ya existe, aumentar cantidad
-        const newQuantity = existingItem.quantity + quantity;
-        
-        if (newQuantity > product.current_stock) {
+        const newQuantity = Number(existingItem.quantity) + Number(quantity);
+
+        if (newQuantity > Number(product.current_stock || 0)) {
             alert(`Stock insuficiente. Disponible: ${product.current_stock}`);
             return false;
         }
-        
+
         existingItem.quantity = newQuantity;
     } else {
         // Agregar nuevo producto
         cart.push({
             id: product.id,
             name: product.name,
-            price: product.price,
-            quantity: quantity,
-            current_stock: product.current_stock,
+            price: Number(product.price),
+            quantity: Number(quantity),
+            current_stock: Number(product.current_stock || 0),
             image_url: product.image_url || null
         });
     }
@@ -77,7 +77,7 @@ function addToCart(product, quantity = 1) {
  */
 function removeFromCart(productId) {
     let cart = getCart();
-    cart = cart.filter(item => item.id !== productId);
+    cart = cart.filter(item => String(item.id) !== String(productId));
     saveCart(cart);
 }
 
@@ -86,12 +86,12 @@ function removeFromCart(productId) {
  */
 function updateCartItemQuantity(productId, newQuantity) {
     const cart = getCart();
-    const item = cart.find(i => i.id === productId);
+    const item = cart.find(i => String(i.id) === String(productId));
     
     if (!item) return false;
     
     // Validar que no exceda el stock
-    if (newQuantity > item.current_stock) {
+    if (newQuantity > Number(item.current_stock || 0)) {
         alert(`Stock insuficiente. Disponible: ${item.current_stock}`);
         return false;
     }
@@ -119,7 +119,7 @@ function clearCart() {
  */
 function getCartItemCount() {
     const cart = getCart();
-    return cart.reduce((total, item) => total + item.quantity, 0);
+    return cart.reduce((total, item) => total + Number(item.quantity || 0), 0);
 }
 
 /**
@@ -127,7 +127,7 @@ function getCartItemCount() {
  */
 function getCartTotal() {
     const cart = getCart();
-    return cart.reduce((total, item) => total + (item.price * item.quantity), 0);
+    return cart.reduce((total, item) => total + (Number(item.price || 0) * Number(item.quantity || 0)), 0);
 }
 
 /**

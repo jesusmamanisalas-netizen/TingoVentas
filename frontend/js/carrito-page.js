@@ -54,7 +54,7 @@ function renderCart() {
     
     // Renderizar cada item
     cart.forEach(item => {
-        const subtotal = item.price * item.quantity;
+        const subtotal = Number(item.price || 0) * Number(item.quantity || 0);
         const row = document.createElement('tr');
         row.className = 'hover:bg-gray-50';
         row.innerHTML = `
@@ -70,26 +70,26 @@ function renderCart() {
                     </div>
                 </div>
             </td>
-            <td class="px-6 py-4 text-gray-900">$${item.price.toFixed(2)}</td>
+            <td class="px-6 py-4 text-gray-900">$${Number(item.price || 0).toFixed(2)}</td>
             <td class="px-6 py-4">
                 <div class="flex items-center space-x-2">
-                    <button onclick="decrementQuantity(${item.id})" class="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300">
+                    <button onclick="decrementQuantity('${item.id}')" class="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300">
                         <i class="fas fa-minus text-sm"></i>
                     </button>
                     <input type="number" 
                         value="${item.quantity}" 
                         min="1" 
                         max="${item.current_stock}"
-                        onchange="changeQuantity(${item.id}, this.value)"
+                        onchange="changeQuantity('${item.id}', this.value)"
                         class="w-12 px-2 py-1 border rounded text-center">
-                    <button onclick="incrementQuantity(${item.id})" class="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300">
+                    <button onclick="incrementQuantity('${item.id}')" class="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300">
                         <i class="fas fa-plus text-sm"></i>
                     </button>
                 </div>
             </td>
-            <td class="px-6 py-4 font-semibold text-gray-900">$${subtotal.toFixed(2)}</td>
+            <td class="px-6 py-4 font-semibold text-gray-900">$${Number(subtotal).toFixed(2)}</td>
             <td class="px-6 py-4">
-                <button onclick="removeItem(${item.id})" class="text-red-600 hover:text-red-800 font-medium">
+                <button onclick="removeItem('${item.id}')" class="text-red-600 hover:text-red-800 font-medium">
                     <i class="fas fa-trash mr-2"></i>Eliminar
                 </button>
             </td>
@@ -127,10 +127,10 @@ function removeItem(productId) {
  */
 function incrementQuantity(productId) {
     const cart = getCart();
-    const item = cart.find(i => i.id === productId);
+    const item = cart.find(i => String(i.id) === String(productId));
     
-    if (item && item.quantity < item.current_stock) {
-        if (updateCartItemQuantity(productId, item.quantity + 1)) {
+    if (item && Number(item.quantity) < Number(item.current_stock || 0)) {
+        if (updateCartItemQuantity(productId, Number(item.quantity) + 1)) {
             renderCart();
         }
     } else if (item) {
@@ -143,13 +143,13 @@ function incrementQuantity(productId) {
  */
 function decrementQuantity(productId) {
     const cart = getCart();
-    const item = cart.find(i => i.id === productId);
+    const item = cart.find(i => String(i.id) === String(productId));
     
-    if (item && item.quantity > 1) {
-        if (updateCartItemQuantity(productId, item.quantity - 1)) {
+    if (item && Number(item.quantity) > 1) {
+        if (updateCartItemQuantity(productId, Number(item.quantity) - 1)) {
             renderCart();
         }
-    } else if (item && item.quantity === 1) {
+    } else if (item && Number(item.quantity) === 1) {
         removeItem(productId);
     }
 }

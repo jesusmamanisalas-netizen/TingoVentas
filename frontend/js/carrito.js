@@ -1,51 +1,33 @@
 /**
- * Módulo de Carrito de Compras
- * Gestiona el carrito usando LocalStorage
+ * Carrito de Compras - LocalStorage
  */
-
 const CART_STORAGE_KEY = 'shopping_cart';
 
-/**
- * Obtener carrito actual del LocalStorage
- */
 function getCart() {
     const cart = localStorage.getItem(CART_STORAGE_KEY);
     return cart ? JSON.parse(cart) : [];
 }
 
-/**
- * Guardar carrito en LocalStorage
- */
 function saveCart(cart) {
     localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
-    // Disparar evento para que otros scripts sepan que cambió el carrito
     window.dispatchEvent(new CustomEvent('cartUpdated', { detail: cart }));
 }
 
-/**
- * Agregar producto al carrito
- * @param {Object} product - Producto a agregar {id, name, price, current_stock}
- * @param {Number} quantity - Cantidad a agregar
- */
 function addToCart(product, quantity = 1) {
     if (!product || !product.id) {
         console.error('Producto inválido');
         return false;
     }
 
-    // Validar stock
     if (quantity > Number(product.current_stock || 0)) {
         alert(`Stock insuficiente. Disponible: ${product.current_stock}`);
         return false;
     }
 
     const cart = getCart();
-    
-    // Buscar si el producto ya existe
     const existingItem = cart.find(item => String(item.id) === String(product.id));
     
     if (existingItem) {
-        // Si ya existe, aumentar cantidad
         const newQuantity = Number(existingItem.quantity) + Number(quantity);
 
         if (newQuantity > Number(product.current_stock || 0)) {
@@ -55,7 +37,6 @@ function addToCart(product, quantity = 1) {
 
         existingItem.quantity = newQuantity;
     } else {
-        // Agregar nuevo producto
         cart.push({
             id: product.id,
             name: product.name,
@@ -71,25 +52,18 @@ function addToCart(product, quantity = 1) {
     return true;
 }
 
-/**
- * Remover producto del carrito
- */
 function removeFromCart(productId) {
     let cart = getCart();
     cart = cart.filter(item => String(item.id) !== String(productId));
     saveCart(cart);
 }
 
-/**
- * Actualizar cantidad de un producto
- */
 function updateCartItemQuantity(productId, newQuantity) {
     const cart = getCart();
     const item = cart.find(i => String(i.id) === String(productId));
     
     if (!item) return false;
     
-    // Validar que no exceda el stock
     if (newQuantity > Number(item.current_stock || 0)) {
         alert(`Stock insuficiente. Disponible: ${item.current_stock}`);
         return false;
@@ -105,25 +79,16 @@ function updateCartItemQuantity(productId, newQuantity) {
     return true;
 }
 
-/**
- * Limpiar carrito completamente
- */
 function clearCart() {
     localStorage.removeItem(CART_STORAGE_KEY);
     window.dispatchEvent(new CustomEvent('cartUpdated', { detail: [] }));
 }
 
-/**
- * Obtener cantidad de items en el carrito
- */
 function getCartItemCount() {
     const cart = getCart();
     return cart.reduce((total, item) => total + Number(item.quantity || 0), 0);
 }
 
-/**
- * Obtener total del carrito
- */
 function getCartTotal() {
     const cart = getCart();
     return cart.reduce((total, item) => total + (Number(item.price || 0) * Number(item.quantity || 0)), 0);

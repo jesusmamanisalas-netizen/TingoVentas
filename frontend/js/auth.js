@@ -1,46 +1,34 @@
 /**
  * Módulo de Autenticación
- * Maneja login, registro, logout y recuperación de contraseña
  */
-
-// Cargar configuración (desde config.js)
-// No redeclarar API_BASE_URL aquí; usar window.APP_CONFIG directamente
 if (typeof window.APP_CONFIG === 'undefined') {
     window.APP_CONFIG = {
         API_BASE_URL: 'https://tingoventas.onrender.com/api'
     };
 }
 
-// Verificar autenticación al cargar
 document.addEventListener('DOMContentLoaded', () => {
     const token = localStorage.getItem('access_token');
     const currentPage = window.location.pathname;
     
-    // Páginas públicas (no requieren autenticación)
     const publicPages = ['login.html', 'tienda.html', '/tienda.html', 'index.html', '/index.html', '/'];
     const isPublicPage = publicPages.some(page => currentPage.includes(page));
     
-    // Si tiene token y está en login, redirigir a dashboard
     if (token && currentPage.includes('login.html')) {
         window.location.href = 'dashboard.html';
         return;
     }
     
-    // Si NO tiene token y está en página privada, redirigir a tienda
     if (!token && !isPublicPage) {
         window.location.href = 'tienda.html';
         return;
     }
     
-    // Cargar nombre de usuario si está logueado
     if (token) {
         loadUserInfo();
     }
 });
 
-/**
- * Login
- */
 async function login(email, password) {
     try {
         const response = await fetch(`${window.APP_CONFIG.API_BASE_URL}/auth/login`, {

@@ -120,6 +120,17 @@ class AuthService:
             user = response.user
             print(f"[REGISTER] Usuario creado en Auth con id: {user.id}")
             
+            # Auto-confirmar email usando service role para que pueda login inmediatamente
+            try:
+                self.service_supabase.auth.admin.update_user_by_id(
+                    user.id,
+                    {"email_confirm": True}
+                )
+                print(f"[REGISTER] Email auto-confirmado para usuario: {user.id}")
+            except Exception as confirm_error:
+                print(f"[REGISTER] Error al confirmar email: {str(confirm_error)}")
+                # Continuar aunque falle la confirmación
+            
             # El trigger en Supabase crea el perfil automáticamente
             
             return {

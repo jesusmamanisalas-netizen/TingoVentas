@@ -28,6 +28,10 @@
                     </div>
                 </div>
                 <div class="flex items-center space-x-4">
+                    <a href="carrito.html" class="relative text-gray-600 hover:text-blue-600">
+                        <i class="fas fa-shopping-cart text-2xl"></i>
+                        <span id="cart-count-badge" class="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center hidden">0</span>
+                    </a>
                     <a href="login.html" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
                         <i class="fas fa-sign-in-alt mr-2"></i>Iniciar Sesión
                     </a>
@@ -55,7 +59,7 @@
                         <input 
                             type="text" 
                             id="search-input" 
-                            placeholder="Buscar productos por nombre, descripción, SKU o marca..."
+                            placeholder="Buscar productos..."
                             class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                         >
                     </div>
@@ -90,9 +94,10 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tus scripts JS -->
     <script src="js/config.js"></script>
+    <script src="js/carrito.js"></script>
     <!-- 🚀 Tu cliente Supabase -->
     <script src="config/supabaseClient.js"></script>
-
+    <script src="js/tienda-public.js"></script>
     <script src="js/tienda.js"></script>
 </body>
 </html>

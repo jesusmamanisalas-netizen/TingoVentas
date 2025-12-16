@@ -3,7 +3,7 @@
  */
 if (typeof window.APP_CONFIG === 'undefined') {
     window.APP_CONFIG = {
-        API_BASE_URL: 'http://localhost:8000/api' // Asegúrate que apunte a tu backend
+        API_BASE_URL: 'https://tingoventas-1.onrender.com/api' // Asegúrate que apunte a tu backend
     };
 }
 

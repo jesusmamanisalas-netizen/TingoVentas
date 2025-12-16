@@ -9,8 +9,6 @@ const API_BASE_URL = window.APP_CONFIG?.API_BASE_URL || 'http://localhost:8000/a
 let currentProducts = [];
 let editingProductId = null;
 
-// ... (Inicio del archivo igual) ...
-
 /**
  * Cargar productos
  */

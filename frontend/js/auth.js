@@ -9,22 +9,39 @@ if (typeof window.APP_CONFIG === 'undefined') {
 
 document.addEventListener('DOMContentLoaded', () => {
     const token = localStorage.getItem('access_token');
+    const userStr = localStorage.getItem('user');
     const currentPage = window.location.pathname;
     
-    const publicPages = ['login.html', 'tienda.html', '/tienda.html', 'index.html', '/index.html', '/'];
-    const isPublicPage = publicPages.some(page => currentPage.includes(page));
+    // 1. Definición de páginas
+    const publicPages = ['login.html', 'tienda.html', 'index.html', '/', 'carrito.html'];
+    const adminPages = ['usuarios.html']; // Solo Admin
+    const staffPages = ['dashboard.html', 'productos.html']; // Admin, Vendedor, Almacenero
     
+    // Normalizar ruta (para evitar errores con /dashboard.html vs dashboard.html)
+    const isPublicPage = publicPages.some(page => currentPage.endsWith(page) || currentPage === '/');
+
+    // 2. Lógica de Redirección Básica (Login/Logout)
     if (token && currentPage.includes('login.html')) {
-        window.location.href = 'dashboard.html';
+        // Si ya está logueado, decidimos a dónde mandarlo según su rol
+        const user = JSON.parse(userStr);
+        if (user.role_id === 4) {
+            window.location.href = 'tienda.html';
+        } else {
+            window.location.href = 'dashboard.html';
+        }
         return;
     }
     
     if (!token && !isPublicPage) {
-        window.location.href = 'tienda.html';
+        window.location.href = 'tienda.html'; // O login.html
         return;
     }
     
-    if (token) {
+    // 3. Lógica de Permisos por ROL (Seguridad de Rutas)
+    if (token && userStr) {
+        const user = JSON.parse(userStr);
+        verifyRoleAccess(user, currentPage); // <--- NUEVA FUNCIÓN DE SEGURIDAD
+        configureMenuByRole(user);           // <--- NUEVA FUNCIÓN DE UI
         loadUserInfo();
     }
 });
@@ -298,3 +315,60 @@ window.authModule = {
     passwordRecovery
 };
 
+/**
+ * Verifica si el usuario tiene permiso para estar en la página actual
+ */
+function verifyRoleAccess(user, currentPage) {
+    const roleId = user.role_id || 4; // Por defecto Cliente si no tiene rol
+
+    // ROLES: 1=Admin, 2=Vendedor, 3=Almacenero, 4=Cliente
+
+    // Regla 1: CLIENTES (Rol 4) NO pueden entrar a dashboard, productos ni usuarios
+    const restrictedForClients = ['dashboard.html', 'productos.html', 'usuarios.html'];
+    if (roleId === 4 && restrictedForClients.some(page => currentPage.includes(page))) {
+        alert("Acceso denegado: Los clientes no tienen acceso a esta zona.");
+        window.location.href = 'tienda.html';
+        return;
+    }
+
+    // Regla 2: VENDEDORES (Rol 2) y ALMACENEROS (Rol 3) NO pueden ver Usuarios
+    if ((roleId === 2 || roleId === 3) && currentPage.includes('usuarios.html')) {
+        alert("Acceso denegado: Solo administradores pueden gestionar usuarios.");
+        window.location.href = 'dashboard.html';
+        return;
+    }
+}
+
+/**
+ * Oculta o muestra elementos del menú según el rol
+ */
+function configureMenuByRole(user) {
+    const roleId = user.role_id || 4;
+
+    // Elementos del DOM (Debes asegurarte de poner estos IDs en tu HTML)
+    const navDashboard = document.getElementById('nav-dashboard');
+    const navProductos = document.getElementById('nav-productos');
+    const navUsuarios = document.getElementById('nav-usuarios');
+    const navTienda = document.getElementById('nav-tienda'); // Generalmente visible para todos
+
+    // Lógica visual
+    if (roleId === 4) { 
+        // --- VISTA CLIENTE ---
+        if(navDashboard) navDashboard.style.display = 'none';
+        if(navProductos) navProductos.style.display = 'none';
+        if(navUsuarios) navUsuarios.style.display = 'none';
+    } 
+    else if (roleId === 2 || roleId === 3) {
+        // --- VISTA VENDEDOR / ALMACENERO ---
+        if(navDashboard) navDashboard.style.display = 'block'; // O 'flex'
+        if(navProductos) navProductos.style.display = 'block';
+        if(navUsuarios) navUsuarios.style.display = 'none'; // Ocultar usuarios
+    } 
+    else if (roleId === 1) {
+        // --- VISTA ADMIN ---
+        // Mostrar todo
+        if(navDashboard) navDashboard.style.display = 'block';
+        if(navProductos) navProductos.style.display = 'block';
+        if(navUsuarios) navUsuarios.style.display = 'block';
+    }
+}

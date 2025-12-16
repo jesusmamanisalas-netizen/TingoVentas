@@ -17,17 +17,10 @@ class AuthService:
     
     async def login(self, email: str, password: str) -> Dict[str, Any]:
         """
-        Autentica un usuario en Supabase Auth
-        
-        Args:
-            email: Email del usuario
-            password: Contraseña del usuario
-            
-        Returns:
-            Dict con token, usuario y datos de sesión
+        Autentica un usuario en Supabase Auth y genera un JWT con role_id
         """
         try:
-            # Autenticar en Supabase Auth
+            # 1. Autenticar en Supabase Auth
             response = self.supabase.auth.sign_in_with_password({
                 "email": email,
                 "password": password
@@ -39,44 +32,37 @@ class AuthService:
             user = response.user
             session = response.session
             
-            # Obtener perfil del usuario
+            # 2. Obtener perfil del usuario desde 'public.profiles'
             profile = self._get_user_profile(user.id)
             
-            # Validar que el usuario tiene perfil (debe existir en la tabla profiles)
             if not profile:
-                raise Exception("Perfil de usuario no encontrado")
+                raise Exception("Perfil de usuario no encontrado (Error de sincronización)")
             
-            # Crear token JWT personalizado con role_id del perfil
-            role_name = "usuario"
-            role_id = profile.get("role_id", 2)  # Usar role_id del perfil
+            # 3. Obtener el role_id (Asumimos 3=Usuario como fallback si es nulo)
+            role_id = profile.get("role_id", 3)
             
-            # Obtener el nombre del rol si existe role_id
-            if role_id:
-                try:
-                    role_response = self.service_supabase.table("roles").select("name").eq("id", role_id).execute()
-                    if role_response.data:
-                        role_name = role_response.data[0].get("name", "usuario")
-                except Exception:
-                    role_name = "usuario"
-            
+            # 4. Crear token JWT que incluye el role_id
             token_data = {
                 "sub": user.id,
                 "email": user.email,
-                "role": role_name
+                "role_id": role_id  # <--- IMPORTANTE: Esto permite validar permisos en el Front/Back
             }
+            
             access_token = create_access_token(token_data)
             
+            # 5. Construir respuesta
             result = {
                 "access_token": access_token,
                 "token_type": "bearer",
                 "user": {
                     "id": user.id,
                     "email": user.email,
+                    "role_id": role_id,
+                    "full_name": profile.get("full_name"),
                     "profile": profile
                 }
             }
             
-            # Solo agregar session si existe
             if session:
                 result["session"] = {
                     "access_token": session.access_token,
@@ -89,21 +75,15 @@ class AuthService:
     
     async def register(self, email: str, password: str, full_name: str) -> Dict[str, Any]:
         """
-        Registra un nuevo usuario
-        
-        Args:
-            email: Email del usuario
-            password: Contraseña del usuario
-            full_name: Nombre completo del usuario
-            
-        Returns:
-            Dict con usuario creado
+        Registra un nuevo usuario.
+        El Trigger en BD se encarga de crear el perfil en 'public.profiles'
+        usando la metadata enviada aquí.
         """
         try:
             print(f"[REGISTER] Iniciando registro para: {email}")
             
-            # Registrar en Supabase Auth sin confirmación de email
-            # El trigger handle_new_user() en Supabase creará el perfil automáticamente
+            # 1. Registrar en Supabase Auth enviando full_name en metadata
+            # Esto dispara el Trigger 'on_auth_user_created' en Postgres
             response = self.supabase.auth.sign_up({
                 "email": email,
                 "password": password,
@@ -120,7 +100,7 @@ class AuthService:
             user = response.user
             print(f"[REGISTER] Usuario creado en Auth con id: {user.id}")
             
-            # Auto-confirmar email usando service role para que pueda login inmediatamente
+            # 2. Auto-confirmar email (Opcional, útil para desarrollo)
             try:
                 self.service_supabase.auth.admin.update_user_by_id(
                     user.id,
@@ -128,35 +108,28 @@ class AuthService:
                 )
                 print(f"[REGISTER] Email auto-confirmado para usuario: {user.id}")
             except Exception as confirm_error:
-                print(f"[REGISTER] Error al confirmar email: {str(confirm_error)}")
-                # Continuar aunque falle la confirmación
+                print(f"[REGISTER] Advertencia al confirmar email: {str(confirm_error)}")
             
-            # El trigger en Supabase crea el perfil automáticamente
+            # Nota: No necesitamos insertar en 'profiles' manualmente, 
+            # el Trigger SQL ya lo hizo leyendo 'full_name' de la metadata.
             
             return {
                 "user": {
                     "id": user.id,
                     "email": user.email,
-                    "full_name": full_name
+                    "full_name": full_name,
+                    "role_id": 3 # Asumimos rol usuario por defecto visualmente
                 },
                 "message": "Usuario registrado exitosamente"
             }
         except Exception as e:
-            print(f"[REGISTER] Error en registro: {str(e)}")
+            print(f"[REGISTER] Error crítico: {str(e)}")
             import traceback
             traceback.print_exc()
             raise Exception(f"Error en registro: {str(e)}")
     
     async def logout(self, access_token: str) -> Dict[str, Any]:
-        """
-        Cierra sesión del usuario
-        
-        Args:
-            access_token: Token de acceso de Supabase
-            
-        Returns:
-            Dict con mensaje de confirmación
-        """
+        """Cierra sesión del usuario"""
         try:
             self.supabase.auth.sign_out()
             return {"message": "Sesión cerrada exitosamente"}
@@ -164,30 +137,16 @@ class AuthService:
             raise Exception(f"Error en logout: {str(e)}")
     
     async def password_recovery(self, email: str) -> Dict[str, Any]:
-        """
-        Solicita recuperación de contraseña
-        
-        Args:
-            email: Email del usuario
-            
-        Returns:
-            Dict con mensaje de confirmación
-        """
+        """Solicita recuperación de contraseña"""
         try:
             self.supabase.auth.reset_password_for_email(email)
-            return {"message": "Se ha enviado un email con instrucciones para recuperar tu contraseña"}
+            return {"message": "Se ha enviado un email con instrucciones"}
         except Exception as e:
             raise Exception(f"Error en recuperación de contraseña: {str(e)}")
     
     def verify_user_token(self, token: str) -> Optional[Dict[str, Any]]:
         """
-        Verifica y decodifica un token JWT
-        
-        Args:
-            token: Token JWT
-            
-        Returns:
-            Dict con datos del usuario o None si es inválido
+        Verifica token y devuelve datos del usuario incluyendo role_id
         """
         try:
             payload = verify_token(token)
@@ -198,7 +157,7 @@ class AuthService:
             if not user_id:
                 return None
             
-            # Verificar que el usuario existe en Supabase
+            # Verificar perfil
             profile = self._get_user_profile(user_id)
             if not profile:
                 return None
@@ -206,10 +165,10 @@ class AuthService:
             return {
                 "id": user_id,
                 "email": payload.get("email"),
-                "role": payload.get("role", "usuario"),
+                "role_id": payload.get("role_id", 3), # Recuperamos el ID numérico
                 "profile": profile
             }
-        except Exception as e:
+        except Exception:
             return None
     
     def _get_user_profile(self, user_id: str) -> Optional[Dict[str, Any]]:
@@ -221,10 +180,3 @@ class AuthService:
             return None
         except Exception:
             return None
-    
-    def _assign_default_role(self, user_id: str):
-        """(Obsoleto) Antes se usaba una tabla user_roles; ahora usamos profiles.role_id.
-        Este método se mantiene como fallback pero no realiza cambios.
-        """
-        return
-

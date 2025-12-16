@@ -10,6 +10,7 @@ function getCart() {
 
 function saveCart(cart) {
     localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
+    // Disparar evento para que otros componentes se enteren
     window.dispatchEvent(new CustomEvent('cartUpdated', { detail: cart }));
 }
 
@@ -19,12 +20,14 @@ function addToCart(product, quantity = 1) {
         return false;
     }
 
+    // Validación básica de stock inicial
     if (quantity > Number(product.current_stock || 0)) {
         alert(`Stock insuficiente. Disponible: ${product.current_stock}`);
         return false;
     }
 
     const cart = getCart();
+    // Convertimos IDs a string para asegurar comparación correcta
     const existingItem = cart.find(item => String(item.id) === String(product.id));
     
     if (existingItem) {
@@ -66,6 +69,7 @@ function updateCartItemQuantity(productId, newQuantity) {
     
     if (newQuantity > Number(item.current_stock || 0)) {
         alert(`Stock insuficiente. Disponible: ${item.current_stock}`);
+        // Devolvemos false para indicar que no se pudo actualizar
         return false;
     }
     
@@ -81,6 +85,7 @@ function updateCartItemQuantity(productId, newQuantity) {
 
 function clearCart() {
     localStorage.removeItem(CART_STORAGE_KEY);
+    // Enviamos array vacío en el evento
     window.dispatchEvent(new CustomEvent('cartUpdated', { detail: [] }));
 }
 
@@ -94,9 +99,6 @@ function getCartTotal() {
     return cart.reduce((total, item) => total + (Number(item.price || 0) * Number(item.quantity || 0)), 0);
 }
 
-/**
- * Obtener cantidad total de productos (por cantidad)
- */
 function getCartTotalItems() {
     const cart = getCart();
     return cart.length;
@@ -110,35 +112,42 @@ function updateCartBadge() {
     if (badge) {
         const count = getCartItemCount();
         badge.textContent = count;
-        badge.style.display = count > 0 ? 'inline-block' : 'none';
+        // Solo mostrar si hay items (mayor a 0)
+        if (count > 0) {
+            badge.classList.remove('hidden');
+            badge.style.display = 'flex'; // Usamos flex para centrar el número
+        } else {
+            badge.classList.add('hidden');
+            badge.style.display = 'none';
+        }
     }
 }
 
-// Actualizar badge cuando carga la página
+// --- EVENT LISTENERS (CORREGIDO) ---
+
+// 1. Cuando carga la página, actualizamos el badge
 document.addEventListener('DOMContentLoaded', () => {
     updateCartBadge();
-    
-    // Escuchar cambios en el carrito
-    window.addEventListener('cartUpdated', () => {
-        updateCartBadge();
-    });
 });
 
-// Actualizar badge cuando el carrito cambia
+// 2. Cuando el carrito cambia (evento personalizado), actualizamos el badge
 window.addEventListener('cartUpdated', () => {
     updateCartBadge();
 });
 
 /**
- * Abrir la página del carrito si el usuario está autenticado,
- * o redirigir a la página de login si no lo está.
+ * Abrir la página del carrito o redirigir al login si no hay sesión.
+ * NOTA: Esta función define si un usuario NO registrado puede ver el carrito.
+ * Tal como está ahora, obliga a loguearse para VER el carrito.
  */
 function openCartOrLogin() {
+    // Si quieres que cualquiera pueda ver el carrito, quita esta validación y ponla solo en el Checkout.
+    /*
     const token = localStorage.getItem('access_token');
     if (!token) {
-        // Redirigir al login para que el usuario inicie sesión
         window.location.href = 'login.html';
         return;
     }
+    */
     window.location.href = 'carrito.html';
 }

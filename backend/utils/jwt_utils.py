@@ -10,10 +10,8 @@ from backend.config import config
 def create_access_token(data: Dict[str, Any]) -> str:
     """
     Crea un token JWT
-    
     Args:
         data: Datos a incluir en el token
-        
     Returns:
         Token JWT codificado
     """
@@ -26,11 +24,11 @@ def create_access_token(data: Dict[str, Any]) -> str:
 
 def verify_token(token: str) -> Optional[Dict[str, Any]]:
     """
-    Verifica y decodifica un token JWT
+    Verifica y decodifica un token JWT.
+    ESTA FUNCIÓN ESTÁ BIEN: Verifica la firma usando el SECRET.
     
     Args:
         token: Token JWT a verificar
-        
     Returns:
         Payload del token o None si es inválido
     """
@@ -42,17 +40,16 @@ def verify_token(token: str) -> Optional[Dict[str, Any]]:
 
 def decode_token(token: str) -> Optional[Dict[str, Any]]:
     """
-    Decodifica un token sin verificar (útil para debugging)
+    Decodifica un token sin verificar (útil para debugging o leer datos en frontend).
+    CORREGIDO: Usamos get_unverified_claims que es la forma correcta en python-jose.
     
     Args:
         token: Token JWT
-        
     Returns:
         Payload del token o None si hay error
     """
     try:
-        payload = jwt.decode(token, options={"verify_signature": False})
-        return payload
+        # CORRECCIÓN: Usamos este método que no pide key ni options
+        return jwt.get_unverified_claims(token)
     except JWTError:
         return None
-

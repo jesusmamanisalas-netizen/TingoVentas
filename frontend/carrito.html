@@ -8,56 +8,63 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="bg-gray-50">
-    <!-- Navbar -->
     <nav class="bg-white shadow-lg">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
                 <div class="flex items-center">
                     <div class="flex-shrink-0 flex items-center">
                         <i class="fas fa-shopping-cart text-blue-600 text-2xl mr-2"></i>
-                        <span class="text-xl font-bold text-gray-800">Tingo Ventas</span>
+                        <a href="tienda.html" class="text-xl font-bold text-gray-800 hover:text-blue-600">Tingo Ventas</a>
                     </div>
                     <div class="hidden md:ml-10 md:flex md:space-x-4">
-                        <a href="tienda.html" class="text-gray-600 hover:text-blue-600 px-3 py-4 text-sm font-medium">Tienda</a>
-                        <a href="dashboard.html" class="text-gray-600 hover:text-blue-600 px-3 py-4 text-sm font-medium">Dashboard</a>
-                        <a href="productos.html" class="text-gray-600 hover:text-blue-600 px-3 py-4 text-sm font-medium">Productos</a>
+                        <a id="nav-tienda" href="tienda.html" class="text-blue-600 border-b-2 border-blue-600 px-3 py-4 text-sm font-medium">Tienda</a>
+                        <a id="nav-dashboard" href="dashboard.html" class="text-gray-600 hover:text-blue-600 px-3 py-4 text-sm font-medium">Dashboard</a>
+                        <a id="nav-productos" href="productos.html" class="text-gray-600 hover:text-blue-600 px-3 py-4 text-sm font-medium">Productos</a>
+                        <a id="nav-usuarios" href="usuarios.html" class="text-gray-600 hover:text-blue-600 px-3 py-4 text-sm font-medium hidden">Usuarios</a>
                     </div>
                 </div>
                 <div class="flex items-center space-x-4">
-                    <a href="carrito.html" class="relative text-gray-600 hover:text-blue-600">
+                    <a href="carrito.html" class="relative text-blue-600">
                         <i class="fas fa-shopping-cart text-2xl"></i>
                         <span id="cart-count-badge" class="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center hidden">0</span>
                     </a>
-                    <span id="user-name">Usuario</span>
-                    <button onclick="logout()" class="text-gray-600 hover:text-gray-900">Logout</button>
+                    <div class="text-sm text-gray-600 flex items-center">
+                        <i class="fas fa-user-circle mr-2"></i>
+                        <span id="user-name">Usuario</span>
+                    </div>
+                    <button id="logout-btn" class="text-gray-600 hover:text-red-600 text-sm font-medium ml-2">
+                        <i class="fas fa-sign-out-alt"></i> Salir
+                    </button>
                 </div>
             </div>
         </div>
     </nav>
 
-    <!-- Main Content -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <!-- Header -->
-        <div class="mb-8">
-            <h1 class="text-3xl font-bold text-gray-800">Mi Carrito</h1>
-            <p class="text-gray-600 mt-2">Revisa y modifica tu carrito de compras</p>
-        </div>
-
-        <!-- Carrito Vacío -->
-        <div id="empty-state" class="bg-white rounded-lg shadow p-8 text-center hidden">
-            <i class="fas fa-shopping-cart text-gray-300 text-6xl mb-4"></i>
-            <h2 class="text-xl font-semibold text-gray-600 mb-2">Tu carrito está vacío</h2>
-            <p class="text-gray-500 mb-6">¡Agrega productos a tu carrito para comenzar!</p>
-            <a href="tienda.html" class="inline-block px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                Volver a la Tienda
+        <div class="mb-8 flex justify-between items-end">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-800">Mi Carrito</h1>
+                <p class="text-gray-600 mt-2">Revisa y modifica tu carrito de compras</p>
+            </div>
+            <a href="tienda.html" class="hidden md:inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                <i class="fas fa-arrow-left mr-2"></i> Seguir Comprando
             </a>
         </div>
 
-        <!-- Carrito con Productos -->
+        <div id="empty-state" class="bg-white rounded-lg shadow p-8 text-center hidden">
+            <div class="bg-blue-50 rounded-full w-24 h-24 flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-shopping-cart text-blue-400 text-4xl"></i>
+            </div>
+            <h2 class="text-xl font-semibold text-gray-600 mb-2">Tu carrito está vacío</h2>
+            <p class="text-gray-500 mb-6">¡Parece que aún no has agregado nada!</p>
+            <a href="tienda.html" class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition">
+                Ir a la Tienda
+            </a>
+        </div>
+
         <div id="cart-content" class="grid grid-cols-1 lg:grid-cols-3 gap-8 hidden">
-            <!-- Tabla de productos -->
             <div class="lg:col-span-2">
-                <div class="bg-white rounded-lg shadow overflow-hidden">
+                <div class="bg-white rounded-lg shadow overflow-hidden mb-6">
                     <table class="w-full">
                         <thead class="bg-gray-50 border-b">
                             <tr>
@@ -65,54 +72,56 @@
                                 <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700">Precio</th>
                                 <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700">Cantidad</th>
                                 <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700">Subtotal</th>
-                                <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700">Acciones</th>
+                                <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700"></th>
                             </tr>
                         </thead>
-                        <tbody id="cart-items" class="divide-y">
-                            <!-- Los items se cargarán aquí con JS -->
-                        </tbody>
+                        <tbody id="cart-items" class="divide-y divide-gray-200">
+                            </tbody>
                     </table>
                 </div>
 
-                <!-- Botón Volver a Tienda -->
-                <div class="mt-6">
-                    <a href="tienda.html" class="text-blue-600 hover:text-blue-700 font-medium">
-                        <i class="fas fa-arrow-left mr-2"></i>Volver a la Tienda
+                <div class="flex justify-between items-center">
+                    <a href="tienda.html" class="inline-flex items-center px-6 py-3 border border-gray-300 shadow-sm text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition cursor-pointer">
+                        <i class="fas fa-arrow-left mr-2"></i> Seguir Comprando
                     </a>
                 </div>
             </div>
 
-            <!-- Resumen de Compra -->
             <div class="lg:col-span-1">
-                <div class="bg-white rounded-lg shadow p-6">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-6">Resumen de Compra</h3>
+                <div class="bg-white rounded-lg shadow p-6 sticky top-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-6 border-b pb-4">Resumen de Compra</h3>
                     
                     <div class="space-y-4 mb-6">
                         <div class="flex justify-between text-gray-600">
                             <span>Subtotal:</span>
-                            <span id="subtotal">$0.00</span>
+                            <span id="subtotal" class="font-medium">$0.00</span>
                         </div>
                         <div class="flex justify-between text-gray-600">
                             <span>Envío:</span>
                             <span class="text-green-600 font-semibold">Gratis</span>
                         </div>
-                        <div class="border-t pt-4 flex justify-between text-lg font-semibold text-gray-800">
+                        <div class="border-t pt-4 flex justify-between text-xl font-bold text-gray-900">
                             <span>Total:</span>
                             <span id="total">$0.00</span>
                         </div>
                     </div>
 
-                    <button onclick="proceedToCheckout()" class="w-full px-4 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition mb-3">
-                        <i class="fas fa-credit-card mr-2"></i>Proceder al Pago
+                    <button onclick="proceedToCheckout()" class="w-full px-4 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition mb-3 shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
+                        <i class="fas fa-credit-card mr-2"></i> Proceder al Pago
                     </button>
 
-                    <button onclick="clearCartConfirm()" class="w-full px-4 py-2 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 transition">
-                        <i class="fas fa-trash mr-2"></i>Vaciar Carrito
+                    <button onclick="clearCartConfirm()" class="w-full px-4 py-2 bg-white border border-red-200 text-red-600 font-medium rounded-lg hover:bg-red-50 transition text-sm">
+                        <i class="fas fa-trash mr-2"></i> Vaciar Carrito
                     </button>
 
-                    <div class="mt-6 p-4 bg-blue-50 rounded-lg text-sm text-blue-700">
-                        <i class="fas fa-info-circle mr-2"></i>
-                        <strong>Nota:</strong> El checkout estará disponible próximamente
+                    <div class="mt-6 p-4 bg-blue-50 rounded-lg text-sm text-blue-700 border border-blue-100">
+                        <div class="flex">
+                            <i class="fas fa-shield-alt mt-1 mr-2"></i>
+                            <div>
+                                <strong>Compra Segura</strong><br>
+                                Tus datos están protegidos.
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

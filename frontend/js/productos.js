@@ -1,5 +1,5 @@
 /**
- * Módulo de Productos
+ * Módulo de Productos tmr
  * Maneja CRUD de productos, búsqueda, filtrado y carga de imágenes
  */
 

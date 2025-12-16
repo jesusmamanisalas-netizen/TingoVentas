@@ -9,18 +9,31 @@ const API_BASE_URL = window.APP_CONFIG?.API_BASE_URL || 'http://localhost:8000/a
 let currentProducts = [];
 let editingProductId = null;
 
+// ... (Inicio del archivo igual) ...
+
 /**
  * Cargar productos
  */
 async function loadProducts(search = '', category = '') {
-    const token = window.authModule?.getAuthToken() || localStorage.getItem('access_token');
+    const token = localStorage.getItem('access_token');
+    const userStr = localStorage.getItem('user');
     
     if (!token) {
         window.location.href = 'login.html';
         return;
     }
 
+    // Bloqueo de Cliente (Role 4) robusto
+    if (userStr) {
+        const user = JSON.parse(userStr);
+        // Usamos la misma lógica: role_id, role, o profile.role_id
+        const roleId = user.role_id || (user.profile && user.profile.role_id) || 4;
+        
+        if (parseInt(roleId) === 4) return; // Si es cliente, no carga nada
+    }
+
     try {
+        // ... (El resto del fetch se mantiene igual) ...
         let url = `${API_BASE_URL}/productos/listar?`;
         if (search) url += `search=${encodeURIComponent(search)}&`;
         if (category) url += `category_id=${encodeURIComponent(category)}&`;

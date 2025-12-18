@@ -195,15 +195,20 @@
                 }
             }
 
+            // CÓDIGO CORREGIDO
             const data = parseJwt(token);
-            const role = data && (data.role || (data.profile && data.profile.role));
-            const allowed = ['1', '2', '3'];
+// Obtenemos el role_id (número) del token
+            const roleId = data ? parseInt(data.role_id) : null;
 
-            if (!role || !allowed.includes(role)) {
-                // No tiene permisos para acceder al panel de productos
-                window.location.href = 'tienda.html';
-                return;
-            }
+// IDs permitidos (Asumiendo: 1=Admin, 2=Vendedor, 3=Almacenero)
+// El ID 4 suele ser "Cliente/Usuario"
+            const allowedIds = [1, 2, 3];
+            if (!roleId || !allowedIds.includes(roleId)) {
+    // Si es cliente (4) o no tiene rol, redirigir
+                console.warn('Acceso denegado: Rol no autorizado', roleId);
+            window.location.href = 'tienda.html';
+            return;
+}
         });
     </script>
     <script>

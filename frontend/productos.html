@@ -197,7 +197,7 @@
 
             const data = parseJwt(token);
             const role = data && (data.role || (data.profile && data.profile.role));
-            const allowed = ['admin', 'vendedor', 'almacenero'];
+            const allowed = ['1', '2', '3'];
 
             if (!role || !allowed.includes(role)) {
                 // No tiene permisos para acceder al panel de productos

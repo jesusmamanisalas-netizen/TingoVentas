@@ -22,9 +22,11 @@
                         <i class="fas fa-shopping-cart text-blue-600 text-2xl mr-2"></i>
                         <span class="text-xl font-bold text-gray-800">Tingo Ventas</span>
                     </div>
-                    <div class="hidden md:ml-10 md:flex md:space-x-4">
+                    <div class="hidden md:ml-10 md:flex md:space-x-4" id="desktop-menu">
                         <a href="tienda.html" class="text-blue-600 border-b-2 border-blue-600 px-3 py-4 text-sm font-medium">Tienda</a>
-                        <a href="login.html" class="text-gray-600 hover:text-blue-600 px-3 py-4 text-sm font-medium">Iniciar Sesión</a>
+                        <!--<a href="login.html" class="auth-link-btn bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
+                            <i class="fas fa-sign-in-alt mr-2"></i><span class="btn-text">Iniciar Sesión</span>
+                        </a>-->
                     </div>
                 </div>
                 <div class="flex items-center space-x-4">
@@ -157,5 +159,84 @@
             }
         }, { once: false });
     </script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        handleAuthDisplay();
+    });
+
+    function parseJwt(token) {
+        try {
+            return JSON.parse(atob(token.split('.')[1]));
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function handleAuthDisplay() {
+        const token = localStorage.getItem('token');
+        
+        // Seleccionamos los elementos del DOM
+        const desktopMenu = document.getElementById('desktop-menu');
+        const loginLinks = document.querySelectorAll('a[href="login.html"]');
+        
+        if (token) {
+            // --- 1. EL USUARIO ESTÁ LOGUEADO ---
+            
+            // Decodificar token para ver el rol
+            const userData = parseJwt(token);
+            const roleId = userData ? parseInt(userData.role_id) : null;
+
+            // A) Cambiar botones de "Iniciar Sesión" por "Cerrar Sesión"
+            loginLinks.forEach(link => {
+                // Cambiar texto e icono
+                link.innerHTML = '<i class="fas fa-sign-out-alt mr-2"></i>Cerrar Sesión';
+                link.href = "#"; // Evitar navegación
+                
+                // Cambiar estilo si es necesario (opcional)
+                if(link.classList.contains('bg-blue-600')) {
+                    link.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+                    link.classList.add('bg-red-600', 'hover:bg-red-700');
+                }
+
+                // Agregar evento de Logout
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    logout();
+                });
+            });
+
+            // B) Si es Vendedor (3) o Admin (1), mostrar botón "Productos"
+            // Asumimos: 1=Admin, 2=Vendedor/Almacenero, 3=Vendedor (Según tu lógica)
+            const authorizedRoles = [1, 3]; 
+
+            if (roleId && authorizedRoles.includes(roleId)) {
+                // Crear enlace de Productos
+                const productosLink = document.createElement('a');
+                productosLink.href = 'productos.html';
+                productosLink.className = 'text-gray-600 hover:text-blue-600 px-3 py-4 text-sm font-medium';
+                productosLink.innerHTML = '<i class="fas fa-boxes mr-1"></i> Gestión Productos';
+                
+                // Insertar antes del botón de cerrar sesión en el menú de escritorio
+                if (desktopMenu) {
+                    // Insertarlo al principio o antes del último elemento
+                    desktopMenu.insertBefore(productosLink, desktopMenu.lastElementChild);
+                }
+            }
+
+        } else {
+            // --- 2. EL USUARIO NO ESTÁ LOGUEADO ---
+            // No hacemos nada, por defecto muestra "Iniciar Sesión"
+        }
+    }
+
+    function logout() {
+        if(confirm('¿Estás seguro de que quieres cerrar sesión?')) {
+            localStorage.removeItem('token');
+            // Recargar la página para limpiar el estado
+            window.location.reload();
+        }
+    }
+</script>
 </body>
 </html>
